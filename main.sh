@@ -6,3 +6,4 @@ yes | sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 sudo systemctl enable sddm.service 
 sudo systemctl set-default graphical.target
 sudo systemctl start sddm.service
+# Please run this on debian or raspberry pi os lite. Maybe ubuntu server and diet pi would work too. Run with ssh or locally after first boot, please don't run with raspi connect.
