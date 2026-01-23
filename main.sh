@@ -3,6 +3,7 @@ sudo apt install plasma-desktop sddm plasma-workspace kwin-wayland upower udisks
 sudo apt install gldriver-test dolphin konsole kdialog kate vlc kde-config-sddm bluedevil plasma-browser-integration wget -y --no-install-recommends
 yes | sh -c "$(wget https://raw.githubusercontent.com/Botspot/pi-apps/master/install -O -)"
 yes | sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+touch /etc/cloud/cloud-init.disable
 sudo systemctl enable sddm.service 
 sudo systemctl set-default graphical.target
 sudo systemctl start sddm.service
