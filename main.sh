@@ -1,5 +1,5 @@
 sudo apt update && sudo apt upgrade -y
-sudo apt install plasma-desktop sddm plasma-workspace kwin-wayland upower udisks2 plasma-nm kscreen partitionmanager chromium -y --no-install-recommends
+sudo apt install plasma-desktop sddm plasma-workspace kwin-wayland upower udisks2 plasma-nm kscreen partitionmanager chromium klipper -y --no-install-recommends
 sudo apt install gldriver-test dolphin konsole kdialog kate vlc kde-config-sddm bluedevil plasma-browser-integration wget git -y --no-install-recommends
 wget -qO- https://raw.githubusercontent.com/Botspot/pi-apps/master/install | bash
 yes | sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
