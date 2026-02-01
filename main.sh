@@ -2,6 +2,7 @@
 set -eo pipefail
 
 # enter screen once
+sudo apt install screen
 if [ -z "${STY:-}" ] && ! screen -list | grep -q plasma-dev; then
   exec screen -S plasma-dev bash "$0"
 fi
