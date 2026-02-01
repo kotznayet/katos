@@ -1,5 +1,4 @@
 #!/bin/bash
-set -eo pipefail
 
 
 append_once() {
@@ -10,10 +9,7 @@ sudo apt update
 sudo apt full-upgrade -y
 
 sudo apt install -y --no-install-recommends \
-  wget curl git ca-certificates gnupg \
-  build-essential ripgrep fd-find \
-  python3 python3-pip python3-venv \
-  screen zsh nodejs npm
+  wget curl git python3 python3-pip python3-venv zsh nodejs npm
 
 sudo apt install -y --no-install-recommends \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
@@ -27,8 +23,6 @@ sudo apt purge -y \
 
 sudo apt autoremove -y
 sudo apt autoclean
-
-have balooctl6 && balooctl6 disable || true
 
 if [ -f /boot/config.txt ]; then
   sudo sed -i \
@@ -45,7 +39,6 @@ QT_QPA_PLATFORM=wayland
 XDG_CURRENT_DESKTOP=KDE
 EOF
 
-if ! grep -q startplasma-wayland ~/.zprofile 2>/dev/null; then
 cat >> ~/.zprofile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
@@ -53,7 +46,7 @@ if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   exec startplasma-wayland
 fi
 EOF
-fi
+
 
 systemctl --user disable plasma-powerdevil.service 2>/dev/null || true
 systemctl --user disable plasma-baloo.service 2>/dev/null || true
@@ -61,9 +54,7 @@ systemctl --user disable plasma-baloo.service 2>/dev/null || true
 sudo mkdir -p /etc/cloud
 sudo touch /etc/cloud/cloud-init.disable
 
-if [ ! -d "$HOME/pi-apps" ]; then
-  git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
-fi
+git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
 
 set +e
 "$HOME/pi-apps/pi-apps" install zram
@@ -85,7 +76,6 @@ mkdir -p ~/.config
 echo "--ozone-platform=wayland" > ~/.config/vivaldi-flags.conf
 echo "--ozone-platform=wayland" > ~/.config/chromium-flags.conf
 
-if have code; then
   mkdir -p ~/.config/Code/User
   cat > ~/.config/Code/User/argv.json <<'EOF'
 {
@@ -94,7 +84,6 @@ if have code; then
   "enable-features": "UseOzonePlatform"
 }
 EOF
-fi
 
 export ZSH="$HOME/.oh-my-zsh"
 if [ ! -d "$ZSH" ]; then
