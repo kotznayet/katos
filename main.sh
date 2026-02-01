@@ -113,6 +113,47 @@ if [ "$SHELL" != "$(command -v zsh)" ]; then
   chsh -s "$(command -v zsh)"
 fi
 
+is_pi5() {
+  grep -q "Raspberry Pi 5" /proc/device-tree/model 2>/dev/null
+}
+
+if is_pi5; then
+  echo "Applying Raspberry Pi 5 auto-tuning"
+
+  # CPU governor: performance
+  for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+    [ -w "$gov" ] && echo performance | sudo tee "$gov" >/dev/null
+  done
+
+  # GPU memory (Wayland + Plasma)
+  if [ -f /boot/config.txt ]; then
+    sudo sed -i '/^gpu_mem=/d' /boot/config.txt
+    echo "gpu_mem=256" | sudo tee -a /boot/config.txt >/dev/null
+  fi
+
+  # VM tuning (better Plasma responsiveness)
+  sudo tee /etc/sysctl.d/99-pi5.conf >/dev/null <<EOF
+vm.swappiness=180
+vm.vfs_cache_pressure=50
+EOF
+
+  sudo sysctl --system >/dev/null
+fi
+
+
 echo "Done. Reboot recommended."
 
-# Please run this on debian or raspberry pi os lite. Maybe ubuntu server and diet pi would work too. Run with ssh or locally after first boot, please don't run with raspi connect.
+read -rp "Reboot now? [y/N]: " ans
+case "$ans" in
+  y|Y|yes|YES)
+    sudo reboot
+    ;;
+  *)
+    echo "Reboot skipped. Please reboot manually later."
+    ;;
+esac
+
+
+# Please run this on debian or raspberry pi os lite. Maybe ubuntu server and diet pi would work too. 
+# Run with ssh or locally after first boot, screen security thingy added so use raspi connect.
+# bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/main.sh)
