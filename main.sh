@@ -1,13 +1,6 @@
 #!/bin/bash
 set -eo pipefail
 
-# enter screen once
-sudo apt install screen
-if [ -z "${STY:-}" ] && ! screen -list | grep -q plasma-dev; then
-  exec screen -S plasma-dev bash "$0"
-fi
-
-have() { command -v "$1" >/dev/null 2>&1; }
 
 append_once() {
   grep -qxF "$1" "$2" 2>/dev/null || echo "$1" | sudo tee -a "$2" >/dev/null
