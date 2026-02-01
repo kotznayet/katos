@@ -17,7 +17,7 @@ sudo apt install -y --no-install-recommends \
 
 sudo apt install -y --no-install-recommends \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
-  plasma-nm klipper bluedevil upower udisks2 \
+  plasma-nm libklipper6 bluedevil upower udisks2 \
   dolphin konsole kdialog kate vlc
 
 sudo apt purge -y \
