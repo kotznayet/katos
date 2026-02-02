@@ -1,37 +1,29 @@
 #!/bin/bash
 
+# Check for internet connectivity
+if ! ping -c 1 google.com &>/dev/null; then
+  echo "No internet connection. Please check your network and try again."
+  exit 1
+fi
 
-append_once() {
-  grep -qxF "$1" "$2" 2>/dev/null || echo "$1" | sudo tee -a "$2" >/dev/null
-}
-
-sudo apt update
-sudo apt full-upgrade -y
+# Error handling for critical commands
+sudo apt update || { echo "Failed to update package list. Exiting..."; exit 1; }
+sudo apt full-upgrade -y || { echo "Failed to upgrade packages. Exiting..."; exit 1; }
 
 sudo apt install -y --no-install-recommends \
-  wget curl git python3 python3-pip python3-venv zsh nodejs npm
+wget curl git python3 python3-pip python3-venv zsh nodejs npm
 
 sudo apt install -y --no-install-recommends \
-  plasma-desktop plasma-workspace kwin-wayland xwayland \
-  plasma-nm libklipper6 bluedevil upower udisks2 \
-  dolphin konsole kdialog kate vlc
+ plasma-desktop plasma-workspace kwin-wayland xwayland plasma-nm libklipper6 \
+ bluedevil upower udisks2 dolphin konsole kdialog kate vlc code imagemagick \
+ spectacle ark filelight systemsettings powerdevil sddm-wayland sddm-theme-breezewayland plasma-pa plasma-thunderbolt plasma-disks plasma-integration plasma-browser-integration plasma-sdk kde-gtk-config kwrite kwalletmanager5 kscreen5 kscreenlocker kde-cli-tools kgamma5 khotkeys kinfocenter ksysguard partitionmanager
 
-sudo apt purge -y \
-  plasma-discover kdeconnect kdeconnectd \
-  baloo-kf6 baloo-kf6-modules \
-  cups cups-daemon cups-client || true
+sudo apt purge -y kdeconnect kdeconnectd cups cups-daemon cups-client || true
 
 sudo apt autoremove -y
-sudo apt autoclean
+sudo apt autoclean -y
 
-if [ -f /boot/config.txt ]; then
-  sudo sed -i \
-    -e 's/^dtoverlay=vc4-fkms-v3d/#&/' \
-    -e '/^dtoverlay=vc4-kms-v3d/d' \
-    /boot/config.txt
-  append_once "dtoverlay=vc4-kms-v3d" /boot/config.txt
-  append_once "gpu_mem=128" /boot/config.txt
-fi
+echo "gpu_mem=256" | sudo tee -a /boot/firmware/config.txt >/dev/null
 
 mkdir -p ~/.config/environment.d
 cat > ~/.config/environment.d/wayland.conf <<EOF
@@ -39,27 +31,34 @@ QT_QPA_PLATFORM=wayland
 XDG_CURRENT_DESKTOP=KDE
 EOF
 
-cat >> ~/.zprofile <<'EOF'
+if ! grep -q "exec startplasma-wayland" ~/.zprofile; then
+  cat >> ~/.zprofile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   sleep 2
   exec startplasma-wayland
 fi
 EOF
-
+fi
 
 systemctl --user disable plasma-powerdevil.service 2>/dev/null || true
 systemctl --user disable plasma-baloo.service 2>/dev/null || true
-
-sudo mkdir -p /etc/cloud
 sudo touch /etc/cloud/cloud-init.disable
 
-git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
+# Ensure pi-apps is installed before using it
+if [ ! -f "$HOME/pi-apps/manage" ]; then
+  echo "pi-apps is not installed. Installing..."
+  git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
+  "$HOME/pi-apps/install"
+fi
 
-set +e
-"$HOME/pi-apps/pi-apps" install zram
-"$HOME/pi-apps/pi-apps" install vivaldi
-set -e
+if ! "$HOME/pi-apps/manage" install zram; then
+  echo "Failed to install zram. Skipping..."
+fi
+
+if ! "$HOME/pi-apps/manage" install vivaldi; then
+  echo "Failed to install vivaldi. Skipping..."
+fi
 
 mkdir -p ~/.config/vivaldi/Default
 cat > ~/.config/vivaldi/Default/Preferences <<'EOF'
@@ -86,42 +85,27 @@ echo "--ozone-platform=wayland" > ~/.config/chromium-flags.conf
 EOF
 
 export ZSH="$HOME/.oh-my-zsh"
-if [ ! -d "$ZSH" ]; then
-  RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-fi
 
-if [ "$SHELL" != "$(command -v zsh)" ]; then
-  chsh -s "$(command -v zsh)"
-fi
+RUNZSH=no CHSH=yes KEEP_ZSHRC=no \
+   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-is_pi5() {
-  grep -q "Raspberry Pi 5" /proc/device-tree/model 2>/dev/null
-}
 
-if is_pi5; then
-  echo "Applying Raspberry Pi 5 auto-tuning"
 
-  # CPU governor: performance
-  for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-    [ -w "$gov" ] && echo performance | sudo tee "$gov" >/dev/null
-  done
+echo "Applying Raspberry Pi 5 auto-tuning"
 
-  # GPU memory (Wayland + Plasma)
-  if [ -f /boot/config.txt ]; then
-    sudo sed -i '/^gpu_mem=/d' /boot/config.txt
-    echo "gpu_mem=256" | sudo tee -a /boot/config.txt >/dev/null
-  fi
+# CPU governor: performance
+for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+  [ -w "$gov" ] && echo performance | sudo tee "$gov" >/dev/null
+done
 
-  # VM tuning (better Plasma responsiveness)
-  sudo tee /etc/sysctl.d/99-pi5.conf >/dev/null <<EOF
+
+# VM tuning (better Plasma responsiveness)
+sudo tee /etc/sysctl.d/99-pi5.conf >/dev/null <<EOF
 vm.swappiness=180
 vm.vfs_cache_pressure=50
 EOF
 
-  sudo sysctl --system >/dev/null
-fi
-
+sudo sysctl --system >/dev/null
 
 echo "Done. Reboot recommended."
 
@@ -135,7 +119,32 @@ case "$ans" in
     ;;
 esac
 
+# Add custom aliases to .zshrc
+cat >> ~/.zshrc <<'EOF'
+# Custom Aliases
+alias la='ls -la'
+alias rf='rm -rf'
+alias updgrade='sudo apt update && sudo apt full-upgrade -y'
+alias cls='clear'
+alias pinstall='./pi-apps/manage install'
+EOF
 
-# Please run this on debian or raspberry pi os lite. Maybe ubuntu server and diet pi would work too. 
-# Run with ssh or locally after first boot, screen security thingy added so use raspi connect.
+# Install Tela icons and Breeze Dark GTK theme
+echo "Installing Tela icons and Breeze Dark GTK theme..."
+sudo apt install -y --no-install-recommends tela-icon-theme breeze-gtk-theme
+
+# Set Tela icons and Breeze Dark GTK theme as default
+mkdir -p ~/.config/gtk-3.0
+cat > ~/.config/gtk-3.0/settings.ini <<EOF
+[Settings]
+gtk-icon-theme-name=Tela
+gtk-theme-name=Breeze-Dark
+gtk-font-name=Noto Sans 10
+EOF
+
+lookandfeeltool -a org.kde.breezedark.desktop
+lookandfeeltool -a org.kde.Tela
+
+# Please run this on raspberry pi os lite. Maybe diet pi would work too.
+# Run with ssh or locally after first boot.
 # bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/main.sh)
