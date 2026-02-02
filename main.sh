@@ -16,7 +16,9 @@ wget curl git python3 python3-pip python3-venv zsh nodejs npm
 sudo apt install -y --no-install-recommends \
  plasma-desktop plasma-workspace kwin-wayland xwayland plasma-nm libklipper6 \
  bluedevil upower udisks2 dolphin konsole kdialog kate vlc code imagemagick \
- spectacle ark filelight systemsettings powerdevil sddm-wayland sddm-theme-breezewayland plasma-pa plasma-thunderbolt plasma-disks plasma-integration plasma-browser-integration plasma-sdk kde-gtk-config kwrite kwalletmanager5 kscreen5 kscreenlocker kde-cli-tools kgamma5 khotkeys kinfocenter ksysguard partitionmanager
+ kde-spectacle ark filelight systemsettings powerdevil plasma-pa plasma-disks \
+ plasma-integration plasma-browser-integration plasma-sdk kde-gtk-config \
+ kwalletmanager5 kscreen5 kscreenlocker kde-cli-tools partitionmanager
 
 sudo apt purge -y kdeconnect kdeconnectd cups cups-daemon cups-client || true
 
