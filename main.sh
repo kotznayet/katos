@@ -38,8 +38,8 @@ fi
 EOF
 fi
 
-systemctl --user disable plasma-powerdevil.service 2>/dev/null || true
-systemctl --user disable plasma-baloo.service 2>/dev/null || true
+sudo systemctl disable ModemManager.service
+sudo systemctl disable smartmontools.service
 sudo touch /etc/cloud/cloud-init.disable
 
 # Ensure pi-apps is installed before using it
@@ -49,24 +49,13 @@ if [ ! -f "$HOME/pi-apps/manage" ]; then
   "$HOME/pi-apps/install"
 fi
 
-if ! "$HOME/pi-apps/manage" install Zram; then
+if ! "$HOME/pi-apps/manage" install "More RAM"; then
   echo "Failed to install zram. Skipping..."
 fi
 
 if ! "$HOME/pi-apps/manage" install Vivaldi; then
   echo "Failed to install vivaldi. Skipping..."
 fi
-
-mkdir -p ~/.config/vivaldi/Default
-cat > ~/.config/vivaldi/Default/Preferences <<'EOF'
-{
-  "vivaldi": {
-    "desktop": {
-      "use_native_window_decoration": true
-    }
-  }
-}
-EOF
 
 mkdir -p ~/.config
 echo "--ozone-platform=wayland" > ~/.config/vivaldi-flags.conf
