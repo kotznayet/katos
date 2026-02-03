@@ -17,13 +17,8 @@ sudo apt install -y --no-install-recommends \
  plasma-desktop plasma-workspace kwin-wayland xwayland plasma-nm libklipper6 \
  bluedevil upower udisks2 dolphin konsole kdialog kate vlc code imagemagick \
  kde-spectacle ark filelight systemsettings powerdevil plasma-pa plasma-disks \
- plasma-integration plasma-browser-integration plasma-sdkg \
+ plasma-integration plasma-browser-integration plasma-sdk \
  kwalletmanager kscreen kde-cli-tools partitionmanager
-
-sudo apt purge -y kdeconnect kdeconnectd cups cups-daemon cups-client || true
-
-sudo apt autoremove -y
-sudo apt autoclean -y
 
 echo "gpu_mem=256" | sudo tee -a /boot/firmware/config.txt >/dev/null
 
@@ -54,11 +49,11 @@ if [ ! -f "$HOME/pi-apps/manage" ]; then
   "$HOME/pi-apps/install"
 fi
 
-if ! "$HOME/pi-apps/manage" install zram; then
+if ! "$HOME/pi-apps/manage" install Zram; then
   echo "Failed to install zram. Skipping..."
 fi
 
-if ! "$HOME/pi-apps/manage" install vivaldi; then
+if ! "$HOME/pi-apps/manage" install Vivaldi; then
   echo "Failed to install vivaldi. Skipping..."
 fi
 
@@ -109,6 +104,16 @@ EOF
 
 sudo sysctl --system >/dev/null
 
+# Add custom aliases to .zshrc
+cat >> ~/.zshrc <<'EOF'
+# Custom Aliases
+alias la='ls -la'
+alias rf='rm -rf'
+alias updgrade='sudo apt update && sudo apt full-upgrade -y'
+alias cls='clear'
+alias pinstall='./pi-apps/manage install'
+EOF
+
 echo "Done. Reboot recommended."
 
 read -rp "Reboot now? [y/N]: " ans
@@ -120,32 +125,6 @@ case "$ans" in
     echo "Reboot skipped. Please reboot manually later."
     ;;
 esac
-
-# Add custom aliases to .zshrc
-cat >> ~/.zshrc <<'EOF'
-# Custom Aliases
-alias la='ls -la'
-alias rf='rm -rf'
-alias updgrade='sudo apt update && sudo apt full-upgrade -y'
-alias cls='clear'
-alias pinstall='./pi-apps/manage install'
-EOF
-
-# Install Tela icons and Breeze Dark GTK theme
-echo "Installing Tela icons and Breeze Dark GTK theme..."
-sudo apt install -y --no-install-recommends tela-icon-theme breeze-gtk-theme
-
-# Set Tela icons and Breeze Dark GTK theme as default
-mkdir -p ~/.config/gtk-3.0
-cat > ~/.config/gtk-3.0/settings.ini <<EOF
-[Settings]
-gtk-icon-theme-name=Tela
-gtk-theme-name=Breeze-Dark
-gtk-font-name=Noto Sans 10
-EOF
-
-lookandfeeltool -a org.kde.breezedark.desktop
-lookandfeeltool -a org.kde.Tela
 
 # Please run this on raspberry pi os lite. Maybe diet pi would work too.
 # Run with ssh or locally after first boot.
