@@ -17,8 +17,8 @@ sudo apt install -y --no-install-recommends \
  plasma-desktop plasma-workspace kwin-wayland xwayland plasma-nm libklipper6 \
  bluedevil upower udisks2 dolphin konsole kdialog kate vlc code imagemagick \
  kde-spectacle ark filelight systemsettings powerdevil plasma-pa plasma-disks \
- plasma-integration plasma-browser-integration plasma-sdk kde-gtk-config \
- kwalletmanager5 kscreen5 kscreenlocker kde-cli-tools partitionmanager
+ plasma-integration plasma-browser-integration plasma-sdkg \
+ kwalletmanager kscreen kde-cli-tools partitionmanager
 
 sudo apt purge -y kdeconnect kdeconnectd cups cups-daemon cups-client || true
 
