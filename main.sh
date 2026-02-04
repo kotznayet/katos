@@ -1,11 +1,4 @@
 #!/bin/bash
-
-# Check for internet connectivity
-if ! ping -c 1 google.com &>/dev/null; then
-  echo "No internet connection. Please check your network and try again."
-  exit 1
-fi
-
 set -e
 
 sudo apt update
@@ -17,7 +10,37 @@ plasma-desktop plasma-workspace kwin-wayland xwayland plasma-nm \
 bluedevil upower udisks2 dolphin konsole kdialog kate vlc code \
 imagemagick kde-spectacle ark filelight systemsettings powerdevil \
 plasma-pa plasma-disks plasma-integration plasma-browser-integration \
-plasma-sdk kwalletmanager kde-cli-tools partitionmanager rpi-eeprom
+plasma-sdk kwalletmanager kde-cli-tools partitionmanager rpi-eeprom \
+exfatprogs nmap kcalc okular pipewire-jack wireplumber obs-studio \
+command-not-found tmux
+
+# ==================================================
+# Kill cloud-init completely (Pi Imager already ran)
+# ==================================================
+
+sudo systemctl disable cloud-init.service \
+  cloud-init-local.service \
+  cloud-config.service \
+  cloud-final.service 2>/dev/null || true
+
+sudo systemctl mask cloud-init.service \
+  cloud-init-local.service \
+  cloud-config.service \
+  cloud-final.service 2>/dev/null || true
+
+sudo apt purge -y cloud-init || true
+sudo rm -rf /etc/cloud /var/lib/cloud
+
+# ==================================================
+# Kill ALL wait-for-network boot delays
+# ==================================================
+
+sudo systemctl disable NetworkManager-wait-online.service 2>/dev/null || true
+sudo systemctl mask NetworkManager-wait-online.service 2>/dev/null || true
+
+sudo systemctl disable systemd-networkd-wait-online.service 2>/dev/null || true
+sudo systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
+
 
 # ==================================================
 # Wayland environment
@@ -71,7 +94,7 @@ EOF
 # ==================================================
 export ZSH="$HOME/.oh-my-zsh"
 RUNZSH=no CHSH=yes KEEP_ZSHRC=no \
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # ==================================================
 # CPU governor
@@ -150,6 +173,13 @@ plasma-apply-lookandfeel org.kde.breezedark.desktop || true
 kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
 kwriteconfig6 --file kdeglobals --group Icons --key Theme Tela
 
+mkdir -p ~/.config/vlc
+cat > ~/.config/vlc/vlcrc <<EOF
+qt-application-theme=dark
+qt-system-tray=false
+qt-minimal-view=true
+EOF
+
 # ==================================================
 # Wayland sleep ON, DPMS OFF, NO LOCKSCREEN
 # ==================================================
@@ -168,6 +198,12 @@ systemctl --user mask plasma-kscreenlocker.service kscreenlocker.service 2>/dev/
 # ==================================================
 sudo sed -i 's/consoleblank=[0-9]\+/consoleblank=0/' /boot/firmware/cmdline.txt || \
 sudo sed -i 's/$/ consoleblank=0/' /boot/firmware/cmdline.txt
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+
+sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' ~/.zshrc
+
+echo 'POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true' >> ~/.zshrc
 
 # ==================================================
 # Tiny swapfile (NO ZRAM)
@@ -182,10 +218,19 @@ if [ ! -f "$SWAPFILE" ]; then
   sudo mkswap "$SWAPFILE"
 fi
 
+sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
+
+sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
+EOF
+
+
 sudo swapon -p -100 "$SWAPFILE"
 echo "$SWAPFILE none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
 
-echo "Setup complete. Reboot recommended."
+echo "Setup complete. Reboot strongly recommended."
 
 read -rp "Reboot now? [y/N]: " ans
 [[ "$ans" =~ ^[Yy] ]] && sudo reboot
