@@ -6,3 +6,4 @@ Any problems? I don't check my github use telegram @kotznayet or kotznayet@mail.
 VSCode and basic tools preinstalled weights about 6 GB.
 Not without an overclock so use with good fans.
 P.S. Check end of main.sh for installation, use pi imager to make an image of pi os lite.
+bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/main.sh)
