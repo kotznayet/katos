@@ -31,7 +31,6 @@ cloud-config.service cloud-final.service 2>/dev/null || true
 
 sudo apt purge -y cloud-init || true
 sudo rm -rf /etc/cloud /var/lib/cloud
-sudo touch /etc/cloud/cloud-init.disable
 
 # ==================================================
 # Kill ALL wait-for-network delays
