@@ -30,7 +30,6 @@ sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo apt purge -y cloud-init || true
 sudo rm -rf /etc/cloud /var/lib/cloud
-sudo touch /etc/cloud/cloud-init.disable
 
 ### ==================================================
 ### Kill wait-online delays
