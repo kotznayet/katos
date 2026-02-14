@@ -1,236 +1,242 @@
 #!/bin/bash
 set -e
 
-# ==================================================
-# Base system update
-# ==================================================
+### ==================================================
+### Base system
+### ==================================================
 sudo apt update
 sudo apt full-upgrade -y
 
-# ==================================================
-# Core packages + KDE Plasma (Wayland)
-# ==================================================
 sudo apt install -y --no-install-recommends \
-wget curl git python3 python3-pip python3-venv zsh nodejs npm \
-plasma-desktop plasma-workspace kwin-wayland xwayland plasma-nm \
-bluedevil upower udisks2 dolphin konsole kdialog kate vlc code \
-imagemagick kde-spectacle ark filelight systemsettings powerdevil \
-plasma-pa plasma-disks plasma-integration plasma-browser-integration \
-plasma-sdk kwalletmanager kde-cli-tools partitionmanager rpi-eeprom \
-exfatprogs nmap kcalc okular pipewire pipewire-jack wireplumber \
-obs-studio command-not-found tmux earlyoom
+  wget curl git zsh tmux unzip \
+  python3 python3-pip python3-venv \
+  nodejs npm \
+  plasma-desktop plasma-workspace kwin-wayland xwayland \
+  plasma-nm bluedevil dolphin konsole kate kdialog \
+  vlc kde-spectacle ark filelight systemsettings powerdevil \
+  plasma-pa plasma-disks plasma-integration plasma-browser-integration \
+  plasma-sdk kwalletmanager kde-cli-tools partitionmanager \
+  pipewire pipewire-jack wireplumber \
+  obs-studio earlyoom code \
+  rpi-eeprom exfatprogs nmap kcalc \
+  command-not-found
 
-# ==================================================
-# Kill cloud-init completely
-# ==================================================
-sudo systemctl disable cloud-init.service cloud-init-local.service \
-cloud-config.service cloud-final.service 2>/dev/null || true
-
+### ==================================================
+### Kill cloud-init
+### ==================================================
+sudo systemctl disable --now cloud-init.service cloud-init-local.service \
+  cloud-config.service cloud-final.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
-cloud-config.service cloud-final.service 2>/dev/null || true
-
+  cloud-config.service cloud-final.service 2>/dev/null || true
 sudo apt purge -y cloud-init || true
 sudo rm -rf /etc/cloud /var/lib/cloud
+sudo touch /etc/cloud/cloud-init.disable
 
-# ==================================================
-# Kill ALL wait-for-network delays
-# ==================================================
-sudo systemctl disable NetworkManager-wait-online.service 2>/dev/null || true
-sudo systemctl mask NetworkManager-wait-online.service 2>/dev/null || true
+### ==================================================
+### Kill wait-online delays
+### ==================================================
+sudo systemctl disable --now NetworkManager-wait-online.service \
+  systemd-networkd-wait-online.service 2>/dev/null || true
+sudo systemctl mask NetworkManager-wait-online.service \
+  systemd-networkd-wait-online.service 2>/dev/null || true
 
-sudo systemctl disable systemd-networkd-wait-online.service 2>/dev/null || true
-sudo systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
-
-# ==================================================
-# Wayland environment (TTY auto-start)
-# ==================================================
+### ==================================================
+### Wayland environment
+### ==================================================
 mkdir -p ~/.config/environment.d
 cat > ~/.config/environment.d/wayland.conf <<EOF
 QT_QPA_PLATFORM=wayland
 XDG_CURRENT_DESKTOP=KDE
 EOF
 
+### ==================================================
+### Auto-start Plasma Wayland ONLY on tty1
+### ==================================================
 if ! grep -q startplasma-wayland ~/.zprofile 2>/dev/null; then
 cat >> ~/.zprofile <<'EOF'
 
-# Start KDE Wayland on tty1 only (no DM)
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   exec startplasma-wayland
 fi
 EOF
 fi
 
-# ==================================================
-# Disable useless services
-# ==================================================
-sudo systemctl disable ModemManager.service smartmontools.service 2>/dev/null || true
+### ==================================================
+### Konsole: correct shell handling (Plasma 6)
+### ==================================================
+mkdir -p ~/.local/share/konsole
+cp -n /usr/share/konsole/Main.profile ~/.local/share/konsole/Main.profile
 
-# ==================================================
-# Pi-Apps (Vivaldi only)
-# ==================================================
-if [ ! -f "$HOME/pi-apps/manage" ]; then
-  git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
-  "$HOME/pi-apps/install"
-fi
+kwriteconfig6 --file ~/.local/share/konsole/Main.profile \
+  --group General --key Command "/usr/bin/zsh"
 
-"$HOME/pi-apps/manage" install Vivaldi || true
+kwriteconfig6 --file konsolerc \
+  --group "Desktop Entry" --key DefaultProfile Main.profile
 
-mkdir -p ~/.config
-echo "--ozone-platform=wayland" > ~/.config/vivaldi-flags.conf
-echo "--ozone-platform=wayland" > ~/.config/chromium-flags.conf
-
-# ==================================================
-# VS Code Wayland flags (future-proof)
-# ==================================================
-mkdir -p ~/.config/Code/User
-cat > ~/.config/Code/User/argv.json <<EOF
-{
-  "enable-crash-reporter": false,
-  "ozone-platform": "wayland",
-  "enable-features": "UseOzonePlatform"
-}
-EOF
-
-# ==================================================
-# Oh My Zsh + Powerlevel10k
-# ==================================================
+### ==================================================
+### Oh My Zsh (no chsh)
+### ==================================================
 export ZSH="$HOME/.oh-my-zsh"
-RUNZSH=no CHSH=yes KEEP_ZSHRC=no \
+RUNZSH=no CHSH=no KEEP_ZSHRC=no \
 yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
-${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+### ==================================================
+### CascadiaCode Nerd Font
+### ==================================================
+TMP_FONT=$(mktemp -d)
+wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/CascadiaCode.zip \
+  -O "$TMP_FONT/font.zip"
+unzip -q "$TMP_FONT/font.zip" -d "$TMP_FONT"
+mkdir -p ~/.local/share/fonts
+cp "$TMP_FONT"/*.ttf ~/.local/share/fonts/
+fc-cache -f
+rm -rf "$TMP_FONT"
 
-sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' ~/.zshrc
-echo 'POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true' >> ~/.zshrc
+### ==================================================
+### VS Code extensions (Natizyskunk SFTP)
+### ==================================================
+code --install-extension ms-python.python --force
+code --install-extension natizyskunk.sftp --force
+code --install-extension esbenp.prettier-vscode --force
+code --install-extension PKief.material-icon-theme --force
+code --install-extension zhuangtongfa.Material-theme --force
 
-# ==================================================
-# CPU governor (performance)
-# ==================================================
-for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-  echo performance | sudo tee "$gov" >/dev/null || true
-done
-
-# ==================================================
-# VM tuning
-# ==================================================
-sudo tee /etc/sysctl.d/99-pi5.conf >/dev/null <<EOF
-vm.swappiness=10
-vm.vfs_cache_pressure=50
-EOF
-sudo sysctl --system >/dev/null
-
-# ==================================================
-# earlyoom (prevents freezes)
-# ==================================================
-sudo tee /etc/default/earlyoom >/dev/null <<'EOF'
-EARLYOOM_ARGS="-r 3600 -m 8 -s 10 --prefer '^(pipewire|wireplumber|kwin|plasmashell)$' --avoid '^(sshd|systemd|dbus|login|Xwayland)$'"
-EARLYOOM_VERBOSE=0
-EOF
-
-sudo systemctl enable --now earlyoom
-
-# ==================================================
-# Low-latency PipeWire
-# ==================================================
-mkdir -p ~/.config/pipewire
-
-if [ ! -f ~/.config/pipewire/pipewire.conf ]; then
-  cp /usr/share/pipewire/pipewire.conf ~/.config/pipewire/
-fi
-
-sed -i \
-  -e 's/#default.clock.rate.*/default.clock.rate = 48000/' \
-  -e 's/#default.clock.quantum.*/default.clock.quantum = 128/' \
-  -e 's/#default.clock.min-quantum.*/default.clock.min-quantum = 64/' \
-  -e 's/#default.clock.max-quantum.*/default.clock.max-quantum = 256/' \
-  ~/.config/pipewire/pipewire.conf
-
-mkdir -p ~/.config/wireplumber/main.lua.d
-cat > ~/.config/wireplumber/main.lua.d/90-realtime.lua <<'EOF'
-alsa_monitor.rules = {
-  {
-    matches = {
-      { { "node.name", "matches", "alsa_*" }, },
-    },
-    apply_properties = {
-      ["node.latency"] = "128/48000",
-      ["priority.driver"] = 200,
-      ["priority.session"] = 200,
-    },
-  },
+### ==================================================
+### VS Code settings + Electron Wayland fixes
+### ==================================================
+mkdir -p ~/.config/Code/User
+cat > ~/.config/Code/User/settings.json <<EOF
+{
+  "workbench.colorTheme": "One Dark Pro",
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
+  "editor.fontLigatures": true,
+  "terminal.integrated.fontFamily": "CascadiaCode Nerd Font",
+  "window.titleBarStyle": "custom",
+  "window.menuBarVisibility": "compact"
 }
 EOF
 
-systemctl --user daemon-reexec
-systemctl --user restart pipewire pipewire-pulse wireplumber
-
-# ==================================================
-# EEPROM FAST BOOT (FULL CONFIG — NO 30s DELAY)
-# ==================================================
-TMP_EEPROM=$(mktemp)
-
-cat > "$TMP_EEPROM" <<'EOF'
-[all]
-BOOT_UART=0
-BOOT_ORDER=0xf41
-NET_INSTALL_AT_POWER_ON=0
-POWER_OFF_ON_HALT=0
-WAKE_ON_GPIO=0
-HDMI_DELAY=0
-DISABLE_HDMI=0
+cat > ~/.config/Code/User/argv.json <<EOF
+{
+  "ozone-platform": "wayland",
+  "enable-features": "UseOzonePlatform",
+  "disable-gpu-sandbox": true,
+  "disable-hardware-acceleration": false
+}
 EOF
+
+### ==================================================
+### Global Electron flags (Chromium / Vivaldi / Code)
+### ==================================================
+cat > ~/.config/electron-flags.conf <<EOF
+--ozone-platform=wayland
+--enable-features=UseOzonePlatform
+--disable-gpu-sandbox
+--disable-features=WaylandWindowDecorations
+--use-gl=egl
+EOF
+
+### ==================================================
+### earlyoom (responsive OOM killer)
+### ==================================================
+sudo systemctl enable --now earlyoom
+sudo sed -i \
+  's/^EARLYOOM_ARGS=.*/EARLYOOM_ARGS="-r 60 -m 5 -s 10 --avoid '\''^(plasmashell|kwin_wayland)$'\''"/' \
+  /etc/default/earlyoom || true
+sudo systemctl restart earlyoom
+
+### ==================================================
+### PipeWire low latency
+### ==================================================
+mkdir -p ~/.config/pipewire/pipewire.conf.d
+cat > ~/.config/pipewire/pipewire.conf.d/low-latency.conf <<EOF
+context.properties = {
+  default.clock.rate = 48000
+  default.clock.quantum = 64
+  default.clock.min-quantum = 32
+  default.clock.max-quantum = 128
+}
+EOF
+
+### ==================================================
+### EEPROM fix (no 30s firmware delay)
+### ==================================================
+TMP_EEPROM=$(mktemp)
+sudo rpi-eeprom-config > "$TMP_EEPROM"
+
+sed -i \
+  -e 's/^BOOT_ORDER=.*/BOOT_ORDER=0xf14/' \
+  -e 's/^#\?HDMI_DELAY=.*/HDMI_DELAY=2/' \
+  -e 's/^#\?BOOT_UART=.*/BOOT_UART=0/' \
+  -e 's/^#\?NET_INSTALL_AT_POWER_ON=.*/NET_INSTALL_AT_POWER_ON=0/' \
+  "$TMP_EEPROM"
 
 sudo rpi-eeprom-config --apply "$TMP_EEPROM"
 rm -f "$TMP_EEPROM"
 
-# ==================================================
-# Overclock (Pi 5 SAFE)
-# ==================================================
-sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d;/force_turbo=/d' \
-/boot/firmware/config.txt
-
+### ==================================================
+### Overclock (Pi 5 + active cooler, safe)
+### ==================================================
+sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d' /boot/firmware/config.txt
 sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
-arm_freq=2600
+arm_freq=2800
 gpu_freq=900
-over_voltage_delta=50000
-force_turbo=0
+over_voltage_delta=80000
 EOF
 
-# ==================================================
-# Active Cooler
-# ==================================================
-sudo systemctl mask rpi-poe-fan.service 2>/dev/null || true
-
-sudo sed -i '/gpio-fan/d;/fan_temp/d;/fan_pwm/d' /boot/firmware/config.txt
-
+### ==================================================
+### Active cooler control
+### ==================================================
+sudo sed -i '/fan_temp/d;/fan_pwm/d' /boot/firmware/config.txt
 sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
 dtparam=fan_temp0=50000
-dtparam=fan_temp1=55000
-dtparam=fan_temp2=60000
-dtparam=fan_temp3=65000
+dtparam=fan_temp1=60000
+dtparam=fan_temp2=70000
 dtparam=fan_pwm=1
 EOF
 
-# ==================================================
-# Tiny swapfile (512MB)
-# ==================================================
+### ==================================================
+### Tela icons + Breeze Dark
+### ==================================================
+if [ ! -d /usr/share/icons/Tela ]; then
+  TMP_TELA=$(mktemp -d)
+  git clone --depth=1 https://github.com/vinceliuice/Tela-icon-theme.git "$TMP_TELA"
+  sudo "$TMP_TELA/install.sh" -a
+  rm -rf "$TMP_TELA"
+fi
+
+plasma-apply-lookandfeel org.kde.breezedark.desktop || true
+kwriteconfig6 --file kdeglobals --group Icons --key Theme Tela
+
+### ==================================================
+### VLC native Wayland dark
+### ==================================================
+mkdir -p ~/.config/vlc
+cat > ~/.config/vlc/vlcrc <<EOF
+qt-application-theme=dark
+qt-system-tray=false
+qt-minimal-view=true
+EOF
+
+### ==================================================
+### Swap (small, deterministic)
+### ==================================================
 sudo swapoff -a
 sudo sed -i '/\sswap\s/d' /etc/fstab
 
-SWAPFILE=/swapfile
-if [ ! -f "$SWAPFILE" ]; then
-  sudo fallocate -l 512M "$SWAPFILE" || sudo dd if=/dev/zero of="$SWAPFILE" bs=1M count=512
-  sudo chmod 600 "$SWAPFILE"
-  sudo mkswap "$SWAPFILE"
+if [ ! -f /swapfile ]; then
+  sudo fallocate -l 512M /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=512
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
 fi
 
-sudo swapon -p -100 "$SWAPFILE"
-echo "$SWAPFILE none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
+sudo swapon -p -100 /swapfile
+echo "/swapfile none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
 
-# ==================================================
-# Autologin tty1
-# ==================================================
+### ==================================================
+### Autologin tty1
+### ==================================================
 sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
 sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EOF
 [Service]
@@ -238,11 +244,9 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
 
-# ==================================================
-# Final
-# ==================================================
-echo "✅ Setup complete. Firmware delay FIXED."
-echo "🔁 Reboot strongly recommended."
+echo "=================================================="
+echo " SETUP COMPLETE — REBOOT STRONGLY RECOMMENDED"
+echo "=================================================="
 
 read -rp "Reboot now? [y/N]: " ans
 [[ "$ans" =~ ^[Yy] ]] && sudo reboot
