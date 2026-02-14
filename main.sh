@@ -10,14 +10,13 @@ sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
-  nodejs npm \
+  nodejs npm papirus-icon-theme \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight systemsettings powerdevil \
   plasma-pa plasma-disks plasma-integration plasma-browser-integration \
   plasma-sdk kwalletmanager kde-cli-tools partitionmanager \
-  pipewire pipewire-jack wireplumber \
-  obs-studio earlyoom \
+  pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
   command-not-found
 
@@ -51,26 +50,22 @@ EOF
 ### ==================================================
 ### Auto-start Plasma Wayland ONLY on tty1
 ### ==================================================
-if ! grep -q startplasma-wayland ~/.profile 2>/dev/null; then
 cat >> ~/.profile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   exec startplasma-wayland
 fi
 EOF
-fi
 
-### ==================================================
-### Konsole shell fix (Plasma 6 correct)
-### ==================================================
 mkdir -p ~/.local/share/konsole
-cp -n /usr/share/konsole/Main.profile ~/.local/share/konsole/Main.profile
 
-kwriteconfig6 --file ~/.local/share/konsole/Main.profile \
-  --group General --key Command "/usr/bin/zsh"
+cat > ~/.local/share/konsole/zsh.profile <<EOF
+[General]
+Name=zsh
+Command=/usr/bin/zsh
+EOF
 
-kwriteconfig6 --file konsolerc \
-  --group "Desktop Entry" --key DefaultProfile Main.profile
+kwriteconfig6 --file konsolerc --group "Desktop Entry" --key DefaultProfile zsh.profile
 
 ### ==================================================
 ### CascadiaCode Nerd Font
@@ -87,12 +82,10 @@ rm -rf "$TMP_FONT"
 ### ==================================================
 ### VS Code extensions (code-oss)
 ### ==================================================
-alias code=code-oss
 code --install-extension ms-python.python --force
 code --install-extension natizyskunk.sftp --force
 code --install-extension esbenp.prettier-vscode --force
 code --install-extension PKief.material-icon-theme --force
-code --install-extension zhuangtongfa.Material-theme --force
 
 ### ==================================================
 ### VS Code settings + Electron Wayland fixes
@@ -181,17 +174,10 @@ dtparam=fan_pwm=1
 EOF
 
 ### ==================================================
-### Tela icons + Breeze Dark (APPLIED)
+### Papirus icons + Breeze Dark (APPLIED)
 ### ==================================================
-if [ ! -d /usr/share/icons/Tela ]; then
-  TMP_TELA=$(mktemp -d)
-  git clone --depth=1 https://github.com/vinceliuice/Tela-icon-theme.git "$TMP_TELA"
-  sudo "$TMP_TELA/install.sh" -a
-  rm -rf "$TMP_TELA"
-fi
-
 kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
-kwriteconfig6 --file kdeglobals --group Icons --key Theme Tela
+kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
 plasma-apply-lookandfeel org.kde.breezedark.desktop || true
 
 mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
@@ -199,14 +185,14 @@ mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
 cat > ~/.config/gtk-3.0/settings.ini <<EOF
 [Settings]
 gtk-theme-name=Breeze-Dark
-gtk-icon-theme-name=Tela
+gtk-icon-theme-name=Papirus-Dark
 gtk-application-prefer-dark-theme=1
 EOF
 
 cat > ~/.config/gtk-4.0/settings.ini <<EOF
 [Settings]
 gtk-theme-name=Breeze-Dark
-gtk-icon-theme-name=Tela
+gtk-icon-theme-name=Papirus-Dark
 gtk-application-prefer-dark-theme=1
 EOF
 
