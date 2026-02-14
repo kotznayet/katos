@@ -51,8 +51,8 @@ EOF
 ### ==================================================
 ### Auto-start Plasma Wayland ONLY on tty1
 ### ==================================================
-if ! grep -q startplasma-wayland ~/.zprofile 2>/dev/null; then
-cat >> ~/.zprofile <<'EOF'
+if ! grep -q startplasma-wayland ~/.profile 2>/dev/null; then
+cat >> ~/.profile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   exec startplasma-wayland
