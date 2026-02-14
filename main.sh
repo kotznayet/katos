@@ -48,7 +48,25 @@ XDG_CURRENT_DESKTOP=KDE
 EOF
 
 ### ==================================================
-### Auto-start Plasma Wayland ONLY on tty1
+### Pi-Apps version
+### ==================================================
+
+if [ ! -d "$HOME/pi-apps" ]; then
+  git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
+  mkdir -p ~/.config/pi-apps
+
+  cat > ~/.config/pi-apps/settings.conf <<EOF
+  DESKTOP_SHORTCUTS=false
+  EOF
+
+  "$HOME/pi-apps/install"
+fi
+
+"$HOME/pi-apps/manage" install OBS
+"$HOME/pi-apps/manage" install Vivaldi
+
+### ==================================================
+### Console and Konsole related stuff
 ### ==================================================
 cat >> ~/.profile <<'EOF'
 
