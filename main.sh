@@ -18,8 +18,7 @@ sudo apt install -y --no-install-recommends \
   plasma-sdk kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber \
   obs-studio earlyoom \
-  rpi-eeprom exfatprogs nmap kcalc \
-  code-oss \
+  rpi-eeprom exfatprogs nmap kcalc code \
   command-not-found
 
 ### ==================================================
