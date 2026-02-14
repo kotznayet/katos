@@ -17,8 +17,9 @@ sudo apt install -y --no-install-recommends \
   plasma-pa plasma-disks plasma-integration plasma-browser-integration \
   plasma-sdk kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber \
-  obs-studio earlyoom code \
+  obs-studio earlyoom \
   rpi-eeprom exfatprogs nmap kcalc \
+  code-oss \
   command-not-found
 
 ### ==================================================
@@ -62,7 +63,7 @@ EOF
 fi
 
 ### ==================================================
-### Konsole: correct shell handling (Plasma 6)
+### Konsole shell fix (Plasma 6 correct)
 ### ==================================================
 mkdir -p ~/.local/share/konsole
 cp -n /usr/share/konsole/Main.profile ~/.local/share/konsole/Main.profile
@@ -72,13 +73,6 @@ kwriteconfig6 --file ~/.local/share/konsole/Main.profile \
 
 kwriteconfig6 --file konsolerc \
   --group "Desktop Entry" --key DefaultProfile Main.profile
-
-### ==================================================
-### Oh My Zsh (no chsh)
-### ==================================================
-export ZSH="$HOME/.oh-my-zsh"
-RUNZSH=no CHSH=no KEEP_ZSHRC=no \
-yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 ### ==================================================
 ### CascadiaCode Nerd Font
@@ -93,8 +87,9 @@ fc-cache -f
 rm -rf "$TMP_FONT"
 
 ### ==================================================
-### VS Code extensions (Natizyskunk SFTP)
+### VS Code extensions (code-oss)
 ### ==================================================
+alias code=code-oss
 code --install-extension ms-python.python --force
 code --install-extension natizyskunk.sftp --force
 code --install-extension esbenp.prettier-vscode --force
@@ -105,6 +100,7 @@ code --install-extension zhuangtongfa.Material-theme --force
 ### VS Code settings + Electron Wayland fixes
 ### ==================================================
 mkdir -p ~/.config/Code/User
+
 cat > ~/.config/Code/User/settings.json <<EOF
 {
   "workbench.colorTheme": "One Dark Pro",
@@ -121,14 +117,10 @@ cat > ~/.config/Code/User/argv.json <<EOF
 {
   "ozone-platform": "wayland",
   "enable-features": "UseOzonePlatform",
-  "disable-gpu-sandbox": true,
-  "disable-hardware-acceleration": false
+  "disable-gpu-sandbox": true
 }
 EOF
 
-### ==================================================
-### Global Electron flags (Chromium / Vivaldi / Code)
-### ==================================================
 cat > ~/.config/electron-flags.conf <<EOF
 --ozone-platform=wayland
 --enable-features=UseOzonePlatform
@@ -138,13 +130,9 @@ cat > ~/.config/electron-flags.conf <<EOF
 EOF
 
 ### ==================================================
-### earlyoom (responsive OOM killer)
+### earlyoom
 ### ==================================================
 sudo systemctl enable --now earlyoom
-sudo sed -i \
-  's/^EARLYOOM_ARGS=.*/EARLYOOM_ARGS="-r 60 -m 5 -s 10 --avoid '\''^(plasmashell|kwin_wayland)$'\''"/' \
-  /etc/default/earlyoom || true
-sudo systemctl restart earlyoom
 
 ### ==================================================
 ### PipeWire low latency
@@ -154,13 +142,11 @@ cat > ~/.config/pipewire/pipewire.conf.d/low-latency.conf <<EOF
 context.properties = {
   default.clock.rate = 48000
   default.clock.quantum = 64
-  default.clock.min-quantum = 32
-  default.clock.max-quantum = 128
 }
 EOF
 
 ### ==================================================
-### EEPROM fix (no 30s firmware delay)
+### EEPROM boot delay fix
 ### ==================================================
 TMP_EEPROM=$(mktemp)
 sudo rpi-eeprom-config > "$TMP_EEPROM"
@@ -176,7 +162,7 @@ sudo rpi-eeprom-config --apply "$TMP_EEPROM"
 rm -f "$TMP_EEPROM"
 
 ### ==================================================
-### Overclock (Pi 5 + active cooler, safe)
+### Overclock (safe Pi 5)
 ### ==================================================
 sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d' /boot/firmware/config.txt
 sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
@@ -186,7 +172,7 @@ over_voltage_delta=80000
 EOF
 
 ### ==================================================
-### Active cooler control
+### Active cooler
 ### ==================================================
 sudo sed -i '/fan_temp/d;/fan_pwm/d' /boot/firmware/config.txt
 sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
@@ -197,7 +183,7 @@ dtparam=fan_pwm=1
 EOF
 
 ### ==================================================
-### Tela icons + Breeze Dark
+### Tela icons + Breeze Dark (APPLIED)
 ### ==================================================
 if [ ! -d /usr/share/icons/Tela ]; then
   TMP_TELA=$(mktemp -d)
@@ -206,8 +192,25 @@ if [ ! -d /usr/share/icons/Tela ]; then
   rm -rf "$TMP_TELA"
 fi
 
-plasma-apply-lookandfeel org.kde.breezedark.desktop || true
+kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
 kwriteconfig6 --file kdeglobals --group Icons --key Theme Tela
+plasma-apply-lookandfeel org.kde.breezedark.desktop || true
+
+mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
+
+cat > ~/.config/gtk-3.0/settings.ini <<EOF
+[Settings]
+gtk-theme-name=Breeze-Dark
+gtk-icon-theme-name=Tela
+gtk-application-prefer-dark-theme=1
+EOF
+
+cat > ~/.config/gtk-4.0/settings.ini <<EOF
+[Settings]
+gtk-theme-name=Breeze-Dark
+gtk-icon-theme-name=Tela
+gtk-application-prefer-dark-theme=1
+EOF
 
 ### ==================================================
 ### VLC native Wayland dark
@@ -220,7 +223,7 @@ qt-minimal-view=true
 EOF
 
 ### ==================================================
-### Swap (small, deterministic)
+### Swap
 ### ==================================================
 sudo swapoff -a
 sudo sed -i '/\sswap\s/d' /etc/fstab
@@ -243,6 +246,9 @@ sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EO
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
+
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
 
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOT STRONGLY RECOMMENDED"
