@@ -150,7 +150,8 @@ mkdir -p ~/.config/pipewire/pipewire.conf.d
 cat > ~/.config/pipewire/pipewire.conf.d/low-latency.conf <<EOF
 context.properties = {
   default.clock.rate = 48000
-  default.clock.quantum = 64
+  default.clock.min-quantum = 64
+  default.clock.max-quantum = 128
 }
 EOF
 
@@ -248,7 +249,7 @@ sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EO
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
-
+kwriteconfig6 --file kdeglobals --group General --key CrashHandler false
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
 
