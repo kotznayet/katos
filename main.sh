@@ -6,7 +6,7 @@ set -e
 ### ==================================================
 sudo apt update
 sudo apt full-upgrade -y
-sudo apt mark hold kscreenlocker
+echo "kscreenlocker hold" | sudo dpkg --set-selections
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
