@@ -26,7 +26,7 @@ sudo systemctl disable --now cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
-sudo apt purge -y cloud-init kscreenlocker || true
+sudo apt purge -y cloud-init kscreenlocker smartmontools || true
 sudo rm -rf /etc/cloud /var/lib/cloud
 
 ### ==================================================
