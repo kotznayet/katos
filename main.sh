@@ -6,7 +6,7 @@ set -e
 ### ==================================================
 sudo apt update
 sudo apt full-upgrade -y
-
+sudo apt mark hold kscreenlocker
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
@@ -60,7 +60,7 @@ EOF
   "$HOME/pi-apps/install"
 fi
 
-"$HOME/pi-apps/manage" install OBS
+"$HOME/pi-apps/manage" install "OBS Studio"
 
 ### ==================================================
 ### tty1 → Plasma Wayland (idempotent)
@@ -194,6 +194,37 @@ sudo tee /etc/default/earlyoom >/dev/null <<EOF
 EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(firefox|code|kwin_wayland)$'"
 EOF
 sudo systemctl enable --now earlyoom
+
+### ------------------------------------------
+### Disable any leftover lock behavior
+### ------------------------------------------
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup false
+
+### ------------------------------------------
+### Wayland-native screen off (DPMS)
+### Screen turns off after 5 minutes, no lock
+### ------------------------------------------
+kwriteconfig6 --file powermanagementprofilesrc \
+  --group AC --group DPMSControl --key idleTime 300
+
+### ------------------------------------------
+### Optional: suspend to RAM after 15 minutes
+### (still no lock)
+### ------------------------------------------
+kwriteconfig6 --file powermanagementprofilesrc \
+  --group AC --group SuspendSession --key idleTime 900
+
+kwriteconfig6 --file powermanagementprofilesrc \
+  --group AC --group SuspendSession --key suspendType 1
+
+### ------------------------------------------
+### Ensure systemd sleep is allowed
+### ------------------------------------------
+sudo systemctl unmask sleep.target suspend.target \
+  hibernate.target hybrid-sleep.target
+
 
 ### ==================================================
 ### PipeWire low latency
