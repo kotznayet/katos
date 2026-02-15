@@ -6,7 +6,6 @@ set -e
 ### ==================================================
 sudo apt update
 sudo apt full-upgrade -y
-echo "kscreenlocker hold" | sudo dpkg --set-selections
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
@@ -27,7 +26,7 @@ sudo systemctl disable --now cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
-sudo apt purge -y cloud-init || true
+sudo apt purge -y cloud-init kscreenlocker || true
 sudo rm -rf /etc/cloud /var/lib/cloud
 
 ### ==================================================
