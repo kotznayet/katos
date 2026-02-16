@@ -234,20 +234,6 @@ context.properties = {
 EOF
 
 ### ==================================================
-### EEPROM boot delay fix
-### ==================================================
-TMP_EEPROM=$(mktemp)
-sudo rpi-eeprom-config > "$TMP_EEPROM"
-sed -i \
-  -e 's/^BOOT_ORDER=.*/BOOT_ORDER=0xf14/' \
-  -e 's/^#\?HDMI_DELAY=.*/HDMI_DELAY=2/' \
-  -e 's/^#\?BOOT_UART=.*/BOOT_UART=0/' \
-  -e 's/^#\?NET_INSTALL_AT_POWER_ON=.*/NET_INSTALL_AT_POWER_ON=0/' \
-  "$TMP_EEPROM"
-sudo rpi-eeprom-config --apply "$TMP_EEPROM"
-rm -f "$TMP_EEPROM"
-
-### ==================================================
 ### Pi 5 overclock + fan
 ### ==================================================
 sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d' /boot/firmware/config.txt
