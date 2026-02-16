@@ -13,7 +13,7 @@ sudo apt install -y --no-install-recommends \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight systemsettings powerdevil \
-  plasma-pa plasma-disks plasma-integration plasma-browser-integration \
+  plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
@@ -26,7 +26,7 @@ sudo systemctl disable --now cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
-sudo apt purge -y cloud-init kscreenlocker smartmontools || true
+sudo apt purge -y cloud-init kscreenlocker || true
 sudo rm -rf /etc/cloud /var/lib/cloud
 
 ### ==================================================
@@ -141,10 +141,6 @@ sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
       "jid1-BoFifL9Vbdl2zQ@jetpack": {
         "install_url": "https://addons.mozilla.org/firefox/downloads/latest/youtube-shorts-block/latest.xpi",
         "installation_mode": "force_installed"
-      },
-      "darkreader@darkreader.org": {
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi",
-        "installation_mode": "force_installed"
       }
     }
   }
@@ -190,7 +186,7 @@ EOF
 ### earlyoom (tuned)
 ### ==================================================
 sudo tee /etc/default/earlyoom >/dev/null <<EOF
-EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(firefox|code|kwin_wayland)$'"
+EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|firefox|code|konsole)$'"
 EOF
 sudo systemctl enable --now earlyoom
 
@@ -306,8 +302,7 @@ git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
 echo "=================================================="
-echo " SETUP COMPLETE — REBOOT STRONGLY RECOMMENDED"
+echo " SETUP COMPLETE — REBOOTING"
 echo "=================================================="
 
-read -rp "Reboot now? [y/N]: " ans
-[[ "$ans" =~ ^[Yy] ]] && sudo reboot
+sudo reboot
