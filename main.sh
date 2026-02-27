@@ -10,14 +10,15 @@ sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
   nodejs npm papirus-icon-theme firefox-esr \
-  plasma-desktop plasma-workspace kwin-wayland xwayland \
+  plasma-desktop plasma-workspace kwin-x11 xserver-xorg xinit \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight systemsettings powerdevil \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found
+  command-not-found \
+  xinput xinput-calibrator xserver-xorg-input-libinput
 
 ### ==================================================
 ### Kill cloud-init
@@ -38,13 +39,28 @@ sudo systemctl mask NetworkManager-wait-online.service \
   systemd-networkd-wait-online.service 2>/dev/null || true
 
 ### ==================================================
-### Wayland environment
+### X11 environment
 ### ==================================================
 mkdir -p ~/.config/environment.d
-cat > ~/.config/environment.d/wayland.conf <<EOF
-QT_QPA_PLATFORM=wayland
+cat > ~/.config/environment.d/x11.conf <<EOF
+QT_QPA_PLATFORM=xcb
+XDG_SESSION_TYPE=x11
 XDG_CURRENT_DESKTOP=KDE
-MOZ_ENABLE_WAYLAND=1
+MOZ_ENABLE_WAYLAND=0
+EOF
+
+### ==================================================
+### Touchscreen (X11 + libinput base config)
+### ==================================================
+sudo mkdir -p /etc/X11/xorg.conf.d
+sudo tee /etc/X11/xorg.conf.d/99-touchscreen.conf >/dev/null <<EOF
+Section "InputClass"
+    Identifier "Touchscreen"
+    MatchIsTouchscreen "on"
+    MatchDevicePath "/dev/input/event*"
+    Driver "libinput"
+    Option "TransformationMatrix" "1 0 0 0 1 0 0 0 1"
+EndSection
 EOF
 
 ### ==================================================
@@ -62,12 +78,12 @@ fi
 "$HOME/pi-apps/manage" install "OBS Studio"
 
 ### ==================================================
-### tty1 → Plasma Wayland (idempotent)
+### tty1 → Plasma X11 (idempotent)
 ### ==================================================
-grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
+grep -q startplasma-x11 ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 
-if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
-  exec startplasma-wayland
+if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" ]]; then
+  exec startplasma-x11
 fi
 EOF
 
@@ -95,7 +111,7 @@ fc-cache -f
 rm -rf "$TMP_FONT"
 
 ### ==================================================
-### Firefox ESR policies (NOT locked)
+### Firefox ESR policies
 ### ==================================================
 sudo mkdir -p /etc/firefox/policies
 sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
@@ -141,44 +157,13 @@ sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
       "jid1-BoFifL9Vbdl2zQ@jetpack": {
         "install_url": "https://addons.mozilla.org/firefox/downloads/latest/youtube-shorts-block/latest.xpi",
         "installation_mode": "force_installed"
+      },
+      "darkreader@darkreader.org": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi",
+        "installation_mode": "force_installed"
       }
     }
   }
-}
-EOF
-
-### ==================================================
-### VS Code extensions (race-safe)
-### ==================================================
-code --version >/dev/null 2>&1 || true
-sleep 2
-
-code --install-extension ms-python.python --force
-code --install-extension natizyskunk.sftp --force
-code --install-extension esbenp.prettier-vscode --force
-code --install-extension PKief.material-icon-theme --force
-
-### ==================================================
-### VS Code settings + Electron Wayland
-### ==================================================
-mkdir -p ~/.config/Code/User
-
-cat > ~/.config/Code/User/settings.json <<EOF
-{
-  "workbench.iconTheme": "material-icon-theme",
-  "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
-  "editor.fontLigatures": true,
-  "terminal.integrated.fontFamily": "CascadiaCode Nerd Font",
-  "window.titleBarStyle": "custom",
-  "window.menuBarVisibility": "compact"
-}
-EOF
-
-cat > ~/.config/Code/User/argv.json <<EOF
-{
-  "ozone-platform": "wayland",
-  "enable-features": "UseOzonePlatform",
-  "disable-gpu-sandbox": true
 }
 EOF
 
@@ -190,84 +175,12 @@ EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|firefox|code|konsole)$'"
 EOF
 sudo systemctl enable --now earlyoom
 
-### ------------------------------------------
-### Disable any leftover lock behavior
-### ------------------------------------------
-kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
-kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false
-kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup false
-
-### ------------------------------------------
-### Wayland-native screen off (DPMS)
-### Screen turns off after 5 minutes, no lock
-### ------------------------------------------
-kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group DPMSControl --key idleTime 300
-
-### ------------------------------------------
-### Optional: suspend to RAM after 15 minutes
-### (still no lock)
-### ------------------------------------------
-kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group SuspendSession --key idleTime 900
-
-kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group SuspendSession --key suspendType 1
-
-### ------------------------------------------
-### Ensure systemd sleep is allowed
-### ------------------------------------------
-sudo systemctl unmask sleep.target suspend.target \
-  hibernate.target hybrid-sleep.target
-
-
-### ==================================================
-### PipeWire low latency
-### ==================================================
-mkdir -p ~/.config/pipewire/pipewire.conf.d
-cat > ~/.config/pipewire/pipewire.conf.d/low-latency.conf <<EOF
-context.properties = {
-  default.clock.rate = 48000
-  default.clock.min-quantum = 64
-  default.clock.max-quantum = 128
-}
-EOF
-
-### ==================================================
-### Pi 5 overclock + fan
-### ==================================================
-sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d' /boot/firmware/config.txt
-sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
-arm_freq=2800
-gpu_freq=900
-over_voltage_delta=80000
-dtparam=fan_temp0=50000
-dtparam=fan_temp1=60000
-dtparam=fan_temp2=70000
-dtparam=fan_pwm=1
-EOF
-
 ### ==================================================
 ### Breeze Dark + Papirus Dark
 ### ==================================================
 kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
 kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
 plasma-apply-lookandfeel org.kde.breezedark.desktop || true
-
-### ==================================================
-### Swap
-### ==================================================
-sudo swapoff -a
-sudo sed -i '/\sswap\s/d' /etc/fstab
-
-if [ ! -f /swapfile ]; then
-  sudo fallocate -l 512M /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=512
-  sudo chmod 600 /swapfile
-  sudo mkswap /swapfile
-fi
-
-sudo swapon -p -100 /swapfile
-echo "/swapfile none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
 
 ### ==================================================
 ### Autologin tty1
@@ -278,14 +191,6 @@ sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EO
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
-
-### ==================================================
-### Zsh + Powerlevel10k
-### ==================================================
-touch ~/.zshrc
-echo 'POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true' >> ~/.zshrc
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k || true
-echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
