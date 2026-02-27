@@ -7,4 +7,4 @@ VSCode and basic tools preinstalled weights about 8 GB.
 Not without an overclock so use with good fans.
 A very thinked theming so firefox has breeze dark and kde uses papirus icons out of the box.
 P.S. Use pi imager to make an image of pi os lite.
-bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/main.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)
