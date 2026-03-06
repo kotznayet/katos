@@ -7,18 +7,14 @@ set -e
 sudo apt update
 sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends \
-  wget curl git zsh tmux unzip \
+  wget curl git zsh unzip \
   python3 python3-pip python3-venv \
-  nodejs npm papirus-icon-theme firefox-esr \
-  plasma-desktop plasma-workspace kwin-x11 xserver-xorg xinit \
-  plasma-nm bluedevil dolphin konsole kate kdialog \
-  vlc kde-spectacle ark filelight systemsettings powerdevil \
-  plasma-pa kscreen plasma-integration plasma-browser-integration \
-  kwalletmanager kde-cli-tools partitionmanager \
+  nodejs npm tela-icon-theme firefox-esr \
+  labwc labwc-themes qlipper vlc dolphin kate kdialog \
+  vlc ark filelight powerdevil plasma-pa \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found \
-  xinput xinput-calibrator xserver-xorg-input-libinput
+  command-not-found screen
 
 ### ==================================================
 ### Kill cloud-init
@@ -39,28 +35,13 @@ sudo systemctl mask NetworkManager-wait-online.service \
   systemd-networkd-wait-online.service 2>/dev/null || true
 
 ### ==================================================
-### X11 environment
+### Wayland environment (still optional)
 ### ==================================================
 mkdir -p ~/.config/environment.d
-cat > ~/.config/environment.d/x11.conf <<EOF
-QT_QPA_PLATFORM=xcb
-XDG_SESSION_TYPE=x11
+cat > ~/.config/environment.d/wayland.conf <<EOF
+QT_QPA_PLATFORM=wayland
 XDG_CURRENT_DESKTOP=KDE
-MOZ_ENABLE_WAYLAND=0
-EOF
-
-### ==================================================
-### Touchscreen (X11 + libinput base config)
-### ==================================================
-sudo mkdir -p /etc/X11/xorg.conf.d
-sudo tee /etc/X11/xorg.conf.d/99-touchscreen.conf >/dev/null <<EOF
-Section "InputClass"
-    Identifier "Touchscreen"
-    MatchIsTouchscreen "on"
-    MatchDevicePath "/dev/input/event*"
-    Driver "libinput"
-    Option "TransformationMatrix" "1 0 0 0 1 0 0 0 1"
-EndSection
+MOZ_ENABLE_WAYLAND=1
 EOF
 
 ### ==================================================
@@ -74,16 +55,14 @@ DESKTOP_SHORTCUTS=false
 EOF
   "$HOME/pi-apps/install"
 fi
-
 "$HOME/pi-apps/manage" install "OBS Studio"
 
 ### ==================================================
-### tty1 → Plasma X11 (idempotent)
+### tty1 → labwc autostart
 ### ==================================================
-grep -q startplasma-x11 ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
-
+grep -q startx ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" ]]; then
-  exec startplasma-x11
+  exec startx
 fi
 EOF
 
@@ -96,7 +75,6 @@ cat > ~/.local/share/konsole/zsh.profile <<EOF
 Name=zsh
 Command=/usr/bin/zsh
 EOF
-kwriteconfig6 --file konsolerc --group "Desktop Entry" --key DefaultProfile zsh.profile
 
 ### ==================================================
 ### CascadiaCode Nerd Font
@@ -111,39 +89,16 @@ fc-cache -f
 rm -rf "$TMP_FONT"
 
 ### ==================================================
-### Firefox ESR policies
+### Firefox ESR policies + extensions
 ### ==================================================
 sudo mkdir -p /etc/firefox/policies
-sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
+sudo tee /etc/firefox/policies/policies.json >/dev/null <<'EOF'
 {
   "policies": {
     "DisableTelemetry": true,
     "DisableFirefoxStudies": true,
     "DisablePocket": true,
     "DisableFeedbackCommands": true,
-
-    "FirefoxHome": {
-      "Search": false,
-      "TopSites": false,
-      "SponsoredTopSites": false,
-      "Highlights": false,
-      "Pocket": false,
-      "SponsoredPocket": false
-    },
-
-    "UserMessaging": {
-      "WhatsNew": false,
-      "ExtensionRecommendations": false,
-      "FeatureRecommendations": false
-    },
-
-    "Preferences": {
-      "browser.tabs.drawInTitlebar": false,
-      "browser.uidensity": 1,
-      "browser.compactmode.show": true,
-      "widget.use-xdg-desktop-portal.file-picker": 1
-    },
-
     "ExtensionSettings": {
       "*": { "installation_mode": "allowed" },
       "uBlock0@raymondhill.net": {
@@ -157,10 +112,6 @@ sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
       "jid1-BoFifL9Vbdl2zQ@jetpack": {
         "install_url": "https://addons.mozilla.org/firefox/downloads/latest/youtube-shorts-block/latest.xpi",
         "installation_mode": "force_installed"
-      },
-      "darkreader@darkreader.org": {
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi",
-        "installation_mode": "force_installed"
       }
     }
   }
@@ -168,7 +119,39 @@ sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
 EOF
 
 ### ==================================================
-### earlyoom (tuned)
+### VS Code extensions
+### ==================================================
+code --version >/dev/null 2>&1 || true
+sleep 2
+code --install-extension ms-python.python --force
+code --install-extension natizyskunk.sftp --force
+code --install-extension esbenp.prettier-vscode --force
+code --install-extension PKief.material-icon-theme --force
+
+### ==================================================
+### VS Code settings + Electron Wayland
+### ==================================================
+mkdir -p ~/.config/Code/User
+cat > ~/.config/Code/User/settings.json <<EOF
+{
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
+  "editor.fontLigatures": true,
+  "terminal.integrated.fontFamily": "CascadiaCode Nerd Font",
+  "window.titleBarStyle": "custom",
+  "window.menuBarVisibility": "compact"
+}
+EOF
+cat > ~/.config/Code/User/argv.json <<EOF
+{
+  "ozone-platform": "wayland",
+  "enable-features": "UseOzonePlatform",
+  "disable-gpu-sandbox": true
+}
+EOF
+
+### ==================================================
+### earlyoom
 ### ==================================================
 sudo tee /etc/default/earlyoom >/dev/null <<EOF
 EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|firefox|code|konsole)$'"
@@ -176,11 +159,57 @@ EOF
 sudo systemctl enable --now earlyoom
 
 ### ==================================================
-### Breeze Dark + Papirus Dark
+### PipeWire low latency
 ### ==================================================
-kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
-kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
-plasma-apply-lookandfeel org.kde.breezedark.desktop || true
+mkdir -p ~/.config/pipewire/pipewire.conf.d
+cat > ~/.config/pipewire/pipewire.conf.d/low-latency.conf <<EOF
+context.properties = {
+  default.clock.rate = 48000
+  default.clock.min-quantum = 64
+  default.clock.max-quantum = 128
+}
+EOF
+
+### ==================================================
+### Pi 5 overclock + fan
+### ==================================================
+sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d' /boot/firmware/config.txt
+sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
+arm_freq=2800
+gpu_freq=900
+over_voltage_delta=80000
+dtparam=fan_temp0=50000
+dtparam=fan_temp1=60000
+dtparam=fan_temp2=70000
+dtparam=fan_pwm=1
+EOF
+
+### ==================================================
+### Labwc theme: Breeze dark
+### ==================================================
+mkdir -p ~/.config/labwc/themes
+cat > ~/.config/labwc/themes/breeze.lua <<'EOF'
+theme.background = "#2e3440"
+theme.focus = "#5294e2"
+theme.text_normal = "#d8dee9"
+theme.text_focus = "#ffffff"
+theme.border_width = 2
+theme.border_color = "#5294e2"
+theme.font = "CascadiaCode Nerd Font 10"
+EOF
+
+### ==================================================
+### Swap
+### ==================================================
+sudo swapoff -a
+sudo sed -i '/\sswap\s/d' /etc/fstab
+if [ ! -f /swapfile ]; then
+  sudo fallocate -l 512M /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=512
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+fi
+sudo swapon -p -100 /swapfile
+echo "/swapfile none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
 
 ### ==================================================
 ### Autologin tty1
@@ -191,6 +220,14 @@ sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EO
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
+
+### ==================================================
+### Zsh + Powerlevel10k
+### ==================================================
+touch ~/.zshrc
+echo 'POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true' >> ~/.zshrc
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k || true
+echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
