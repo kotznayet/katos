@@ -11,7 +11,7 @@ sudo apt install -y --no-install-recommends sudo \
   python3 python3-pip python3-venv \
   nodejs npm firefox-esr \
   labwc qlipper vlc dolphin kate kdialog \
-  vlc ark filelight powerdevil plasma-pa \
+  vlc ark filelight powerdevil pulseaudio \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
   command-not-found screen
