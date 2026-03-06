@@ -9,13 +9,27 @@ sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends sudo \
   wget curl git zsh unzip \
   python3 python3-pip python3-venv \
-  nodejs npm tela-icon-theme firefox-esr \
-  labwc labwc-themes qlipper vlc dolphin kate kdialog \
+  nodejs npm firefox-esr \
+  labwc qlipper vlc dolphin kate kdialog \
   vlc ark filelight powerdevil plasma-pa \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
   command-not-found screen
+  
+### ==================================================
+### Tela icon theme (install minimal)
+### ==================================================
+TMP_TELA=$(mktemp -d)
 
+git clone --depth=1 https://github.com/vinceliuice/Tela-icon-theme "$TMP_TELA"
+
+cd "$TMP_TELA"
+
+# Install ONLY the standard dark variant (avoids installing all variants)
+./install.sh -d ~/.icons -n Tela
+
+cd
+rm -rf "$TMP_TELA"
 ### ==================================================
 ### Kill cloud-init
 ### ==================================================
