@@ -6,7 +6,7 @@ set -e
 ### ==================================================
 sudo apt update
 sudo apt full-upgrade -y
-sudo apt install -y --no-install-recommends \
+sudo apt install -y --no-install-recommends sudo \
   wget curl git zsh unzip \
   python3 python3-pip python3-venv \
   nodejs npm tela-icon-theme firefox-esr \
