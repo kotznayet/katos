@@ -181,7 +181,6 @@ over_voltage_delta=80000
 dtparam=fan_temp0=50000
 dtparam=fan_temp1=60000
 dtparam=fan_temp2=70000
-dtparam=fan_pwm=1
 EOF
 
 ### ==================================================
