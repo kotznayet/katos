@@ -6,30 +6,19 @@ set -e
 ### ==================================================
 sudo apt update
 sudo apt full-upgrade -y
-sudo apt install -y --no-install-recommends sudo \
-  wget curl git zsh unzip \
+sudo apt install -y --no-install-recommends \
+  wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
-  nodejs npm firefox-esr \
-  labwc qlipper vlc dolphin kate kdialog \
-  vlc ark filelight powerdevil pulseaudio \
+  nodejs npm papirus-icon-theme firefox-esr \
+  plasma-desktop plasma-workspace kwin-wayland xwayland \
+  plasma-nm bluedevil dolphin konsole kate kdialog \
+  vlc kde-spectacle ark filelight systemsettings powerdevil \
+  plasma-pa kscreen plasma-integration plasma-browser-integration \
+  kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found screen
-  
-### ==================================================
-### Tela icon theme (install minimal)
-### ==================================================
-TMP_TELA=$(mktemp -d)
+  command-not-found
 
-git clone --depth=1 https://github.com/vinceliuice/Tela-icon-theme "$TMP_TELA"
-
-cd "$TMP_TELA"
-
-# Install ONLY the standard dark variant (avoids installing all variants)
-./install.sh -d ~/.icons -n Tela
-
-cd
-rm -rf "$TMP_TELA"
 ### ==================================================
 ### Kill cloud-init
 ### ==================================================
@@ -49,7 +38,7 @@ sudo systemctl mask NetworkManager-wait-online.service \
   systemd-networkd-wait-online.service 2>/dev/null || true
 
 ### ==================================================
-### Wayland environment (still optional)
+### Wayland environment
 ### ==================================================
 mkdir -p ~/.config/environment.d
 cat > ~/.config/environment.d/wayland.conf <<EOF
@@ -69,14 +58,16 @@ DESKTOP_SHORTCUTS=false
 EOF
   "$HOME/pi-apps/install"
 fi
+
 "$HOME/pi-apps/manage" install "OBS Studio"
 
 ### ==================================================
-### tty1 → labwc autostart
+### tty1 → Plasma Wayland (idempotent)
 ### ==================================================
-grep -q startx ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
-if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" ]]; then
-  exec startx
+grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
+
+if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
+  exec startplasma-wayland
 fi
 EOF
 
@@ -89,6 +80,7 @@ cat > ~/.local/share/konsole/zsh.profile <<EOF
 Name=zsh
 Command=/usr/bin/zsh
 EOF
+kwriteconfig6 --file konsolerc --group "Desktop Entry" --key DefaultProfile zsh.profile
 
 ### ==================================================
 ### CascadiaCode Nerd Font
@@ -103,16 +95,39 @@ fc-cache -f
 rm -rf "$TMP_FONT"
 
 ### ==================================================
-### Firefox ESR policies + extensions
+### Firefox ESR policies (NOT locked)
 ### ==================================================
 sudo mkdir -p /etc/firefox/policies
-sudo tee /etc/firefox/policies/policies.json >/dev/null <<'EOF'
+sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
 {
   "policies": {
     "DisableTelemetry": true,
     "DisableFirefoxStudies": true,
     "DisablePocket": true,
     "DisableFeedbackCommands": true,
+
+    "FirefoxHome": {
+      "Search": false,
+      "TopSites": false,
+      "SponsoredTopSites": false,
+      "Highlights": false,
+      "Pocket": false,
+      "SponsoredPocket": false
+    },
+
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false
+    },
+
+    "Preferences": {
+      "browser.tabs.drawInTitlebar": false,
+      "browser.uidensity": 1,
+      "browser.compactmode.show": true,
+      "widget.use-xdg-desktop-portal.file-picker": 1
+    },
+
     "ExtensionSettings": {
       "*": { "installation_mode": "allowed" },
       "uBlock0@raymondhill.net": {
@@ -133,10 +148,11 @@ sudo tee /etc/firefox/policies/policies.json >/dev/null <<'EOF'
 EOF
 
 ### ==================================================
-### VS Code extensions
+### VS Code extensions (race-safe)
 ### ==================================================
 code --version >/dev/null 2>&1 || true
 sleep 2
+
 code --install-extension ms-python.python --force
 code --install-extension natizyskunk.sftp --force
 code --install-extension esbenp.prettier-vscode --force
@@ -146,6 +162,7 @@ code --install-extension PKief.material-icon-theme --force
 ### VS Code settings + Electron Wayland
 ### ==================================================
 mkdir -p ~/.config/Code/User
+
 cat > ~/.config/Code/User/settings.json <<EOF
 {
   "workbench.iconTheme": "material-icon-theme",
@@ -156,6 +173,7 @@ cat > ~/.config/Code/User/settings.json <<EOF
   "window.menuBarVisibility": "compact"
 }
 EOF
+
 cat > ~/.config/Code/User/argv.json <<EOF
 {
   "ozone-platform": "wayland",
@@ -165,12 +183,43 @@ cat > ~/.config/Code/User/argv.json <<EOF
 EOF
 
 ### ==================================================
-### earlyoom
+### earlyoom (tuned)
 ### ==================================================
 sudo tee /etc/default/earlyoom >/dev/null <<EOF
 EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|firefox|code|konsole)$'"
 EOF
 sudo systemctl enable --now earlyoom
+
+### ------------------------------------------
+### Disable any leftover lock behavior
+### ------------------------------------------
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup false
+
+### ------------------------------------------
+### Wayland-native screen off (DPMS)
+### Screen turns off after 5 minutes, no lock
+### ------------------------------------------
+kwriteconfig6 --file powermanagementprofilesrc \
+  --group AC --group DPMSControl --key idleTime 300
+
+### ------------------------------------------
+### Optional: suspend to RAM after 15 minutes
+### (still no lock)
+### ------------------------------------------
+kwriteconfig6 --file powermanagementprofilesrc \
+  --group AC --group SuspendSession --key idleTime 900
+
+kwriteconfig6 --file powermanagementprofilesrc \
+  --group AC --group SuspendSession --key suspendType 1
+
+### ------------------------------------------
+### Ensure systemd sleep is allowed
+### ------------------------------------------
+sudo systemctl unmask sleep.target suspend.target \
+  hibernate.target hybrid-sleep.target
+
 
 ### ==================================================
 ### PipeWire low latency
@@ -195,32 +244,28 @@ over_voltage_delta=80000
 dtparam=fan_temp0=50000
 dtparam=fan_temp1=60000
 dtparam=fan_temp2=70000
+dtparam=fan_pwm=1
 EOF
 
 ### ==================================================
-### Labwc theme: Breeze dark
+### Breeze Dark + Papirus Dark
 ### ==================================================
-mkdir -p ~/.config/labwc/themes
-cat > ~/.config/labwc/themes/breeze.lua <<'EOF'
-theme.background = "#2e3440"
-theme.focus = "#5294e2"
-theme.text_normal = "#d8dee9"
-theme.text_focus = "#ffffff"
-theme.border_width = 2
-theme.border_color = "#5294e2"
-theme.font = "CascadiaCode Nerd Font 10"
-EOF
+kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
+kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
+plasma-apply-lookandfeel org.kde.breezedark.desktop || true
 
 ### ==================================================
 ### Swap
 ### ==================================================
 sudo swapoff -a
 sudo sed -i '/\sswap\s/d' /etc/fstab
+
 if [ ! -f /swapfile ]; then
   sudo fallocate -l 512M /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=512
   sudo chmod 600 /swapfile
   sudo mkswap /swapfile
 fi
+
 sudo swapon -p -100 /swapfile
 echo "/swapfile none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
 
