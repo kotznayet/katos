@@ -1,4 +1,4 @@
-Hi this is BETA
+Hi this is BETA and doesnt work (mostly) i am prototyping!
 Wanted a lightweight and very cool os for your pi 5... You may have found it.
 It is not password protected by default.
 Used chatgpt. Labwc based, customised out-of-the-box.
