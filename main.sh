@@ -9,7 +9,7 @@ sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
-  nodejs npm papirus-icon-theme firefox-esr \
+  nodejs npm papirus-icon-theme \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight systemsettings powerdevil \
@@ -17,7 +17,7 @@ sudo apt install -y --no-install-recommends \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found
+  command-not-found yt-dlp ffmpeg
 
 ### ==================================================
 ### Kill cloud-init
@@ -60,6 +60,16 @@ EOF
 fi
 
 "$HOME/pi-apps/manage" install "OBS Studio"
+~/pi-apps/install app "Vivaldi"
+~/pi-apps/install app "Persepolis Download Manager"
+
+### Autostart modprobe for v4l2loopback
+if ! grep -q "v4l2loopback" /etc/modules; then
+  echo "v4l2loopback" | sudo tee -a /etc/modules
+fi
+if ! grep -q "options v4l2loopback exclusive_caps=1" /etc/modprobe.d/v4l2loopback.conf 2>/dev/null; then
+  echo "options v4l2loopback exclusive_caps=1" | sudo tee /etc/modprobe.d/v4l2loopback.conf
+fi
 
 ### ==================================================
 ### tty1 → Plasma Wayland (idempotent)
@@ -93,59 +103,6 @@ mkdir -p ~/.local/share/fonts
 cp "$TMP_FONT"/*.ttf ~/.local/share/fonts/
 fc-cache -f
 rm -rf "$TMP_FONT"
-
-### ==================================================
-### Firefox ESR policies (NOT locked)
-### ==================================================
-sudo mkdir -p /etc/firefox/policies
-sudo tee /etc/firefox/policies/policies.json >/dev/null <<EOF
-{
-  "policies": {
-    "DisableTelemetry": true,
-    "DisableFirefoxStudies": true,
-    "DisablePocket": true,
-    "DisableFeedbackCommands": true,
-
-    "FirefoxHome": {
-      "Search": false,
-      "TopSites": false,
-      "SponsoredTopSites": false,
-      "Highlights": false,
-      "Pocket": false,
-      "SponsoredPocket": false
-    },
-
-    "UserMessaging": {
-      "WhatsNew": false,
-      "ExtensionRecommendations": false,
-      "FeatureRecommendations": false
-    },
-
-    "Preferences": {
-      "browser.tabs.drawInTitlebar": false,
-      "browser.uidensity": 1,
-      "browser.compactmode.show": true,
-      "widget.use-xdg-desktop-portal.file-picker": 1
-    },
-
-    "ExtensionSettings": {
-      "*": { "installation_mode": "allowed" },
-      "uBlock0@raymondhill.net": {
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
-        "installation_mode": "force_installed"
-      },
-      "sponsorBlocker@ajay.app": {
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/sponsorblock/latest.xpi",
-        "installation_mode": "force_installed"
-      },
-      "jid1-BoFifL9Vbdl2zQ@jetpack": {
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/youtube-shorts-block/latest.xpi",
-        "installation_mode": "force_installed"
-      }
-    }
-  }
-}
-EOF
 
 ### ==================================================
 ### VS Code extensions (race-safe)
@@ -186,7 +143,7 @@ EOF
 ### earlyoom (tuned)
 ### ==================================================
 sudo tee /etc/default/earlyoom >/dev/null <<EOF
-EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|firefox|code|konsole)$'"
+EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|vivaldi|obs|code|konsole)$'"
 EOF
 sudo systemctl enable --now earlyoom
 
@@ -286,6 +243,12 @@ touch ~/.zshrc
 echo 'POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true' >> ~/.zshrc
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k || true
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
+
+### Configure Compose Key
+mkdir -p ~/.config/environment.d
+cat > ~/.config/environment.d/compose-key.conf <<EOF
+XKBOPTIONS=compose:ralt
+EOF
 
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
