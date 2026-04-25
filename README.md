@@ -1,4 +1,4 @@
-# This is Work In Progress!
+# This is Work In Progress
 
 Wanted a lightweight and very cool os for your pi 5... You may have found it.
 It is not password protected by default.
