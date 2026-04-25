@@ -12,12 +12,12 @@ sudo apt install -y --no-install-recommends \
   nodejs npm papirus-icon-theme \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
-  vlc kde-spectacle ark filelight systemsettings powerdevil \
+  vlc kde-spectacle ark filelight  systemsettings powerdevil \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found yt-dlp ffmpeg
+  command-not-found yt-dlp ffmpeg zlib1g-dev libxss1-dev
 
 ### ==================================================
 ### Kill cloud-init
@@ -58,21 +58,11 @@ DESKTOP_SHORTCUTS=false
 EOF
   "$HOME/pi-apps/install"
 fi
-
 "$HOME/pi-apps/manage" install "OBS Studio"
-~/pi-apps/install app "Vivaldi"
-~/pi-apps/install app "Persepolis Download Manager"
-
-### Autostart modprobe for v4l2loopback
-if ! grep -q "v4l2loopback" /etc/modules; then
-  echo "v4l2loopback" | sudo tee -a /etc/modules
-fi
-if ! grep -q "options v4l2loopback exclusive_caps=1" /etc/modprobe.d/v4l2loopback.conf 2>/dev/null; then
-  echo "options v4l2loopback exclusive_caps=1" | sudo tee /etc/modprobe.d/v4l2loopback.conf
-fi
-
+"$HOME/pi-apps/manage" install "Zen"
+"$HOME/pi-apps/manage" install "Persepolis Download Manager"
 ### ==================================================
-### tty1 → Plasma Wayland (idempotent)
+### tty1 → Plasma Wayland
 ### ==================================================
 grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 
@@ -82,7 +72,7 @@ fi
 EOF
 
 ### ==================================================
-### Konsole → zsh (no chsh)
+### Konsole → zsh
 ### ==================================================
 mkdir -p ~/.local/share/konsole
 cat > ~/.local/share/konsole/zsh.profile <<EOF
@@ -105,7 +95,7 @@ fc-cache -f
 rm -rf "$TMP_FONT"
 
 ### ==================================================
-### VS Code extensions (race-safe)
+### VS Code extensions
 ### ==================================================
 code --version >/dev/null 2>&1 || true
 sleep 2
@@ -126,8 +116,9 @@ cat > ~/.config/Code/User/settings.json <<EOF
   "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
   "editor.fontLigatures": true,
   "terminal.integrated.fontFamily": "CascadiaCode Nerd Font",
-  "window.titleBarStyle": "custom",
-  "window.menuBarVisibility": "compact"
+  "window.titleBarStyle": "native",
+  "window.menuBarVisibility": "compact",
+  "window.menuStyle": "custom"
 }
 EOF
 
@@ -143,7 +134,7 @@ EOF
 ### earlyoom (tuned)
 ### ==================================================
 sudo tee /etc/default/earlyoom >/dev/null <<EOF
-EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|vivaldi|obs|code|konsole)$'"
+EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|zen|code|konsole)$'"
 EOF
 sudo systemctl enable --now earlyoom
 
@@ -156,17 +147,17 @@ kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup false
 
 ### ------------------------------------------
 ### Wayland-native screen off (DPMS)
-### Screen turns off after 5 minutes, no lock
+### Screen turns off after 10 minutes, no lock
 ### ------------------------------------------
 kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group DPMSControl --key idleTime 300
+  --group AC --group DPMSControl --key idleTime 600
 
 ### ------------------------------------------
-### Optional: suspend to RAM after 15 minutes
+### Optional: suspend to RAM after 20 minutes
 ### (still no lock)
 ### ------------------------------------------
 kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group SuspendSession --key idleTime 900
+  --group AC --group SuspendSession --key idleTime 1200
 
 kwriteconfig6 --file powermanagementprofilesrc \
   --group AC --group SuspendSession --key suspendType 1
@@ -240,7 +231,6 @@ EOF
 ### Zsh + Powerlevel10k
 ### ==================================================
 touch ~/.zshrc
-echo 'POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true' >> ~/.zshrc
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k || true
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
