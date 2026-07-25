@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 ### ==================================================
 ### Base system
@@ -26,15 +25,13 @@ sudo systemctl disable --now cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
-sudo apt purge -y cloud-init kscreenlocker || true
+sudo apt purge -y cloud-init || true
 sudo rm -rf /etc/cloud /var/lib/cloud
 
 ### ==================================================
 ### Kill wait-online delays
 ### ==================================================
 sudo systemctl disable --now NetworkManager-wait-online.service \
-  systemd-networkd-wait-online.service 2>/dev/null || true
-sudo systemctl mask NetworkManager-wait-online.service \
   systemd-networkd-wait-online.service 2>/dev/null || true
 
 ### ==================================================
@@ -52,10 +49,6 @@ EOF
 ### ==================================================
 if [ ! -d "$HOME/pi-apps" ]; then
   git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
-  mkdir -p ~/.config/pi-apps
-  cat > ~/.config/pi-apps/settings.conf <<EOF
-DESKTOP_SHORTCUTS=false
-EOF
   "$HOME/pi-apps/install"
 fi
 "$HOME/pi-apps/manage" install "OBS Studio"
@@ -99,9 +92,6 @@ rm -rf "$TMP_FONT"
 ### ==================================================
 code --version >/dev/null 2>&1 || true
 sleep 2
-
-code --install-extension ms-python.python --force
-code --install-extension natizyskunk.sftp --force
 code --install-extension esbenp.prettier-vscode --force
 code --install-extension PKief.material-icon-theme --force
 
@@ -180,42 +170,12 @@ context.properties = {
   default.clock.max-quantum = 128
 }
 EOF
-
-### ==================================================
-### Pi 5 overclock + fan
-### ==================================================
-sudo sed -i '/arm_freq=/d;/gpu_freq=/d;/over_voltage_delta=/d' /boot/firmware/config.txt
-sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
-arm_freq=2800
-gpu_freq=900
-over_voltage_delta=80000
-dtparam=fan_temp0=50000
-dtparam=fan_temp1=60000
-dtparam=fan_temp2=70000
-dtparam=fan_pwm=1
-EOF
-
 ### ==================================================
 ### Breeze Dark + Papirus Dark
 ### ==================================================
 kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
 kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
 plasma-apply-lookandfeel org.kde.breezedark.desktop || true
-
-### ==================================================
-### Swap
-### ==================================================
-sudo swapoff -a
-sudo sed -i '/\sswap\s/d' /etc/fstab
-
-if [ ! -f /swapfile ]; then
-  sudo fallocate -l 512M /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=512
-  sudo chmod 600 /swapfile
-  sudo mkswap /swapfile
-fi
-
-sudo swapon -p -100 /swapfile
-echo "/swapfile none swap sw,pri=-100 0 0" | sudo tee -a /etc/fstab >/dev/null
 
 ### ==================================================
 ### Autologin tty1
