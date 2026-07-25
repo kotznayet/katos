@@ -16,7 +16,7 @@ sudo apt install -y --no-install-recommends \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found yt-dlp ffmpeg zlib1g-dev libxss1-dev
+  command-not-found yt-dlp ffmpeg zlib1g-dev
 
 ### ==================================================
 ### Kill cloud-init
