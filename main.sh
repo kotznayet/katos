@@ -8,7 +8,7 @@ sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
-  nodejs npm papirus-icon-theme \
+  nodejs npm  \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight  systemsettings powerdevil \
@@ -16,16 +16,16 @@ sudo apt install -y --no-install-recommends \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
   rpi-eeprom exfatprogs nmap kcalc code \
-  command-not-found yt-dlp ffmpeg zlib1g-dev libxss1
+  command-not-found yt-dlp ffmpeg 
 
 ### ==================================================
-### Kill cloud-init
+### Kill cloud-init and remove htop
 ### ==================================================
 sudo systemctl disable --now cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
-sudo apt purge -y cloud-init || true
+sudo apt purge -y cloud-init htop || true
 sudo rm -rf /etc/cloud /var/lib/cloud
 
 ### ==================================================
@@ -51,7 +51,7 @@ if [ ! -d "$HOME/pi-apps" ]; then
   git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
   "$HOME/pi-apps/install"
 fi
-"$HOME/pi-apps/manage" install "OBS Studio"
+"$HOME/pi-apps/manage" install "More RAM"
 "$HOME/pi-apps/manage" install "Zen"
 "$HOME/pi-apps/manage" install "Persepolis Download Manager"
 ### ==================================================
@@ -61,6 +61,7 @@ grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   exec startplasma-wayland
+  zsh
 fi
 EOF
 
@@ -88,21 +89,12 @@ fc-cache -f
 rm -rf "$TMP_FONT"
 
 ### ==================================================
-### VS Code extensions
-### ==================================================
-code --version >/dev/null 2>&1 || true
-sleep 2
-code --install-extension esbenp.prettier-vscode --force
-code --install-extension PKief.material-icon-theme --force
-
-### ==================================================
 ### VS Code settings + Electron Wayland
 ### ==================================================
 mkdir -p ~/.config/Code/User
 
 cat > ~/.config/Code/User/settings.json <<EOF
 {
-  "workbench.iconTheme": "material-icon-theme",
   "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
   "editor.fontLigatures": true,
   "terminal.integrated.fontFamily": "CascadiaCode Nerd Font",
@@ -124,19 +116,18 @@ EOF
 ### earlyoom (tuned)
 ### ==================================================
 sudo tee /etc/default/earlyoom >/dev/null <<EOF
-EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(yes|zen|code|konsole)$'"
+EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(zen|konsole)$'"
 EOF
 sudo systemctl enable --now earlyoom
 
 ### ------------------------------------------
-### Disable any leftover lock behavior
+### Disable lock behavior
 ### ------------------------------------------
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup false
 
 ### ------------------------------------------
-### Wayland-native screen off (DPMS)
 ### Screen turns off after 10 minutes, no lock
 ### ------------------------------------------
 kwriteconfig6 --file powermanagementprofilesrc \
@@ -144,7 +135,6 @@ kwriteconfig6 --file powermanagementprofilesrc \
 
 ### ------------------------------------------
 ### Optional: suspend to RAM after 20 minutes
-### (still no lock)
 ### ------------------------------------------
 kwriteconfig6 --file powermanagementprofilesrc \
   --group AC --group SuspendSession --key idleTime 1200
