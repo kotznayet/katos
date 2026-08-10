@@ -15,7 +15,7 @@ sudo apt install -y --no-install-recommends \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber earlyoom \
-  rpi-eeprom exfatprogs nmap kcalc code \
+  rpi-eeprom exfatprogs nmap kcalc \
   command-not-found yt-dlp ffmpeg 
 
 ### ==================================================
@@ -93,7 +93,7 @@ rm -rf "$TMP_FONT"
 ### ==================================================
 mkdir -p ~/.config/Code/User
 
-cat > ~/.config/Code/User/settings.json <<EOF
+cat > ~/.config/VSCodium/User/settings.json <<EOF
 {
   "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
   "editor.fontLigatures": true,
@@ -104,22 +104,13 @@ cat > ~/.config/Code/User/settings.json <<EOF
 }
 EOF
 
-cat > ~/.config/Code/User/argv.json <<EOF
+cat > ~/.config/VSCodium/User/argv.json <<EOF
 {
   "ozone-platform": "wayland",
   "enable-features": "UseOzonePlatform",
   "disable-gpu-sandbox": true
 }
 EOF
-
-### ==================================================
-### earlyoom (tuned)
-### ==================================================
-sudo tee /etc/default/earlyoom >/dev/null <<EOF
-EARLYOOM_ARGS="-r 60 -m 5 -s 10 --prefer '^(zen|konsole)$'"
-EOF
-sudo systemctl enable --now earlyoom
-
 ### ------------------------------------------
 ### Disable lock behavior
 ### ------------------------------------------
