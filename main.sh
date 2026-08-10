@@ -14,7 +14,7 @@ sudo apt install -y --no-install-recommends \
   vlc kde-spectacle ark filelight  systemsettings powerdevil \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
-  pipewire pipewire-jack wireplumber earlyoom \
+  pipewire pipewire-jack wireplumber \
   rpi-eeprom exfatprogs nmap kcalc \
   command-not-found yt-dlp ffmpeg 
 
@@ -54,6 +54,7 @@ fi
 "$HOME/pi-apps/manage" install "More RAM"
 "$HOME/pi-apps/manage" install "Zen"
 "$HOME/pi-apps/manage" install "Persepolis Download Manager"
+"$HOME/pi-apps/manage" install "VSCodium"
 ### ==================================================
 ### tty1 → Plasma Wayland
 ### ==================================================
@@ -91,7 +92,7 @@ rm -rf "$TMP_FONT"
 ### ==================================================
 ### VS Code settings + Electron Wayland
 ### ==================================================
-mkdir -p ~/.config/Code/User
+mkdir -p ~/.config/VSCodium/User
 
 cat > ~/.config/VSCodium/User/settings.json <<EOF
 {
@@ -155,7 +156,6 @@ EOF
 ### Breeze Dark + Papirus Dark
 ### ==================================================
 kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
-kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
 plasma-apply-lookandfeel org.kde.breezedark.desktop || true
 
 ### ==================================================
