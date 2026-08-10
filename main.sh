@@ -62,7 +62,6 @@ grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   exec startplasma-wayland
-  zsh
 fi
 EOF
 
@@ -181,8 +180,6 @@ cat > ~/.config/environment.d/compose-key.conf <<EOF
 XKBOPTIONS=compose:ralt
 EOF
 
-wget https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Felis_catus-cat_on_snow.jpg/1280px-Felis_catus-cat_on_snow.jpg
-plasma-apply-wallpaperimage 1280px-Felis_catus-cat_on_snow.jpg
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
 echo "=================================================="
