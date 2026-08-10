@@ -181,6 +181,8 @@ cat > ~/.config/environment.d/compose-key.conf <<EOF
 XKBOPTIONS=compose:ralt
 EOF
 
+wget https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Felis_catus-cat_on_snow.jpg/1280px-Felis_catus-cat_on_snow.jpg
+plasma-apply-wallpaperimage 1280px-Felis_catus-cat_on_snow.jpg
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
 echo "=================================================="
