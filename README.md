@@ -1,15 +1,9 @@
-# This is Work In Progress
-#Planning to remove most of the codebase and use armbian
 Wanted a lightweight and very cool os for your pi 5... You may have found it.
-It is not password protected by default.
-Used chatgpt. KDE based, customised out-of-the-box with Zen Browesr.
-Any problems? I don't check my github frequently so wait a little bit.
-VSCode and basic tools preinstalled, weights about 8 GB.
-Not without an overclock so use with good fans.
-A thinked theming: uses papirus icons out of the box.
+It is not password protected by default. KDE based, customised out-of-the-box with Zen Browser.
+VSCodium and basic tools preinstalled, weights about 9 GB.
+Cool theming: Breeze Dark out of the box.
 To install use pi imager to make an image of pi os lite and run 
 
 `bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)`
 
-to insttall.
-Wallpaper By Von.grzanka - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=9437797
+to install.
