@@ -11,4 +11,5 @@ To install use pi imager to make an image of pi os lite and run
 
 `bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)`
 
-after insttall.
+to insttall.
+Wallpaper By Von.grzanka - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=9437797
