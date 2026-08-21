@@ -11,7 +11,7 @@ sudo apt install -y --no-install-recommends \
   nodejs npm btop toilet \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
-  vlc kde-spectacle ark filelight  systemsettings powerdevil \
+  vlc kde-spectacle ark filelight systemsettings powerdevil \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber \
@@ -176,12 +176,24 @@ touch ~/.zshrc
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k || true
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
-### Configure Compose Key
-mkdir -p ~/.config/environment.d
-cat > ~/.config/environment.d/compose-key.conf <<EOF
-XKBOPTIONS=compose:ralt
-EOF
+### ==================================================
+### Remove unused swap file
+### ==================================================
+for swapfile in /swapfile /swap.img; do
+  if [ -f "$swapfile" ] && grep -qF "$swapfile" /proc/swaps; then
+    sudo swapoff "$swapfile" 2>/dev/null || true
+  fi
+  if [ -f "$swapfile" ]; then
+    if ! grep -qE "^[^#[:space:]]*[[:space:]]+" "$swapfile" 2>/dev/null; then
+      sudo rm -f "$swapfile"
+    fi
+  fi
+done
+sudo sed -i -E '\|^[[:space:]]*/(swapfile|swap\.img)[[:space:]]+none[[:space:]]+swap[[:space:]]|d' /etc/fstab
 
+### ==================================================
+### Reboot
+### ==================================================
 echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
 echo "=================================================="
