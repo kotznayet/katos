@@ -8,7 +8,7 @@ sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
-  nodejs npm btop \
+  nodejs npm btop toilet \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight  systemsettings powerdevil \
@@ -61,7 +61,9 @@ fi
 grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
-  exec startplasma-wayland
+  toilet --metal katos
+  startplasma-wayland
+  exec zsh
 fi
 EOF
 
@@ -152,7 +154,7 @@ context.properties = {
 }
 EOF
 ### ==================================================
-### Breeze Dark + Papirus Dark
+### Breeze Dark
 ### ==================================================
 kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark
 plasma-apply-lookandfeel org.kde.breezedark.desktop || true
