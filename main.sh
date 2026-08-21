@@ -179,18 +179,8 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 ### ==================================================
 ### Remove unused swap file
 ### ==================================================
-for swapfile in /swapfile /swap.img; do
-  if [ -f "$swapfile" ] && grep -qF "$swapfile" /proc/swaps; then
-    sudo swapoff "$swapfile" 2>/dev/null || true
-  fi
-  if [ -f "$swapfile" ]; then
-    if ! grep -qE "^[^#[:space:]]*[[:space:]]+" "$swapfile" 2>/dev/null; then
-      sudo rm -f "$swapfile"
-    fi
-  fi
-done
-sudo sed -i -E '\|^[[:space:]]*/(swapfile|swap\.img)[[:space:]]+none[[:space:]]+swap[[:space:]]|d' /etc/fstab
 
+sudo rm /var/swap
 ### ==================================================
 ### Reboot
 ### ==================================================
