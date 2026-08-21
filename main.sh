@@ -53,6 +53,17 @@ if [ ! -d "$HOME/pi-apps" ]; then
 fi
 "$HOME/pi-apps/manage" install "More RAM"
 "$HOME/pi-apps/manage" install "Zen"
+
+### ==================================================
+### Zen Browser — uBlock Origin
+### ==================================================
+ZEN_PROFILE=$(find "$HOME/.zen" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -n1)
+if [ -n "$ZEN_PROFILE" ]; then
+  mkdir -p "$ZEN_PROFILE/extensions"
+  wget -qO "$ZEN_PROFILE/extensions/uBlock0@raymondhill.net.xpi" \
+    'https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi'
+fi
+
 "$HOME/pi-apps/manage" install "Persepolis Download Manager"
 "$HOME/pi-apps/manage" install "VSCodium"
 ### ==================================================
@@ -179,8 +190,8 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 ### ==================================================
 ### Remove unused swap file
 ### ==================================================
-
 sudo rm /var/swap
+
 ### ==================================================
 ### Reboot
 ### ==================================================
