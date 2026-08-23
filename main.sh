@@ -27,10 +27,6 @@ sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo apt purge -y cloud-init htop || true
 sudo rm -rf /etc/cloud /var/lib/cloud
-
-### ==================================================
-### Kill wait-online delays
-### ==================================================
 sudo systemctl disable --now NetworkManager-wait-online.service \
   systemd-networkd-wait-online.service 2>/dev/null || true
 
@@ -53,6 +49,8 @@ if [ ! -d "$HOME/pi-apps" ]; then
 fi
 "$HOME/pi-apps/manage" install "More RAM"
 "$HOME/pi-apps/manage" install "Zen"
+"$HOME/pi-apps/manage" install "Persepolis Download Manager"
+"$HOME/pi-apps/manage" install "VSCodium"
 
 ### ==================================================
 ### Zen Browser — uBlock Origin
@@ -64,17 +62,15 @@ if [ -n "$ZEN_PROFILE" ]; then
     'https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi'
 fi
 
-"$HOME/pi-apps/manage" install "Persepolis Download Manager"
-"$HOME/pi-apps/manage" install "VSCodium"
 ### ==================================================
 ### tty1 → Plasma Wayland
 ### ==================================================
 grep -q startplasma-wayland ~/.profile 2>/dev/null || cat >> ~/.profile <<'EOF'
 
 if [[ "$(tty)" == "/dev/tty1" && -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
+  clear
   toilet --metal katos
   startplasma-wayland
-  exec zsh
 fi
 EOF
 
@@ -129,29 +125,7 @@ EOF
 ### ------------------------------------------
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false
-kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup false
-
-### ------------------------------------------
-### Screen turns off after 10 minutes, no lock
-### ------------------------------------------
-kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group DPMSControl --key idleTime 600
-
-### ------------------------------------------
-### Optional: suspend to RAM after 20 minutes
-### ------------------------------------------
-kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group SuspendSession --key idleTime 1200
-
-kwriteconfig6 --file powermanagementprofilesrc \
-  --group AC --group SuspendSession --key suspendType 1
-
-### ------------------------------------------
-### Ensure systemd sleep is allowed
-### ------------------------------------------
-sudo systemctl unmask sleep.target suspend.target \
-  hibernate.target hybrid-sleep.target
-
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnStartup true
 
 ### ==================================================
 ### PipeWire low latency
