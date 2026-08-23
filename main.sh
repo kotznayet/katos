@@ -8,7 +8,7 @@ sudo apt full-upgrade -y
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
-  nodejs npm btop toilet \
+  nodejs npm btop toilet pkexec \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
   plasma-nm bluedevil dolphin konsole kate kdialog \
   vlc kde-spectacle ark filelight systemsettings powerdevil \
