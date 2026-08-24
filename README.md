@@ -4,6 +4,6 @@ It is Raspberry Pi OS lite/Debian trixie based, but with KDE Plasma, Breeze Dark
 
 VSCodium and basic tools preinstalled, weights about 5.5 GB.
 
-First get an image of Debian Trixie-like arm64 os (RPi os/Debian Trixie on other SBCs)
+First get an image of Debian Trixie-like arm64 os (RPi os/Debian Trixie on other SBCs) and run 
 `bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)`
-to install.
+ to install.
