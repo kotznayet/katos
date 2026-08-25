@@ -3,8 +3,9 @@
 ### ==================================================
 ### Base system
 ### ==================================================
+set -euo pipefail
 sudo apt update
-sudo apt full-upgrade -y
+sudo apt upgrade -y
 sudo apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
@@ -164,7 +165,7 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 ### ==================================================
 ### Remove unused swap file
 ### ==================================================
-sudo rm /var/swap
+sudo rm -f /var/swap
 
 ### ==================================================
 ### Reboot
