@@ -1,9 +1,26 @@
-Wanted a lightweight and very cool os for your pi 5 (or any arm64 sbc)... You may have found it.
+## Katos
+>Wanted a lightweight and cool os* for your RPi 5 (or any arm64 sbc)... You may have found it.
 
-It is Raspberry Pi OS lite/Debian trixie based, but with KDE Plasma, Breeze Dark and Zen Browser.
+> It needs:
+>+ 5.5 GB storage
+>+ 1GB memory
+>+ arm64 processor
+>+ Debian Trixie 
 
-VSCodium and basic tools preinstalled, weights about 5.5 GB.
+Katos is Raspberry Pi OS ***lite***/Debian trixie based, but with KDE Plasma, Breeze Dark and Zen Browser (and ublock origin).
 
-First get an image of Debian Trixie-like arm64 os (RPi os/Debian Trixie on other SBCs) and run 
+VSCodium and other tools preinstalled.
+
+>It has:
+>+ nmap
+>+ KDE partition manager
+>+ pi-apps
+>+ Persepolis download manager
+>+ zram
+>+ ark
+
+First get an image of Debian Trixie-like arm64 os (RPi os lite/Debian Trixie on other SBCs) and run 
 `bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)`
  to install.
+
+*It is an installer script not a distro.
