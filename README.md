@@ -25,3 +25,4 @@ First get an image of Debian Trixie-like arm64 os (RPi os lite/Debian Trixie on 
 
 *It is an installer script not a distro.
 This wont work on termux.
+Я мог пользоваться чатжпт.
