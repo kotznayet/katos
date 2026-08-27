@@ -6,7 +6,7 @@ set -euo pipefail
 if [ -z "${STY:-}" ]; then
     sudo apt update
     sudo apt install -y screen
-    exec screen -S katos_install bash -c 'bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)'
+    exec screen -S katos bash "$0"
 fi
 
 ### Base system
@@ -29,13 +29,12 @@ sudo apt install -y --no-install-recommends \
 ### Remove everyting unneeded
 
 sudo systemctl disable --now cloud-init.service cloud-init-local.service \
-  cloud-config.service cloud-final.service 2>/dev/null || true
+  cloud-config.service cloud-final.service NetworkManager-wait-online.service \
+  systemd-networkd-wait-online.service 2>/dev/null || true
 sudo systemctl mask cloud-init.service cloud-init-local.service \
   cloud-config.service cloud-final.service 2>/dev/null || true
 sudo apt purge -y cloud-init htop || true
 sudo rm -rf /etc/cloud /var/lib/cloud
-sudo systemctl disable --now NetworkManager-wait-online.service \
-  systemd-networkd-wait-online.service 2>/dev/null || true
 
 
 ### Wayland environment
@@ -50,10 +49,9 @@ EOF
 
 ### Pi-Apps
 
-if [ ! -d "$HOME/pi-apps" ]; then
-  git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
-  "$HOME/pi-apps/install"
-fi
+
+git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
+"$HOME/pi-apps/install"
 "$HOME/pi-apps/manage" install "More RAM"
 "$HOME/pi-apps/manage" install "Zen"
 "$HOME/pi-apps/manage" install "Persepolis Download Manager"
@@ -167,8 +165,6 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
 sudo rm -f /var/swap
 
-echo "=================================================="
 echo " SETUP COMPLETE — REBOOTING"
-echo "=================================================="
 
 sudo reboot
