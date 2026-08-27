@@ -24,3 +24,4 @@ First get an image of Debian Trixie-like arm64 os (RPi os lite/Debian Trixie on 
  to install.
 
 *It is an installer script not a distro.
+This wont work on termux.
