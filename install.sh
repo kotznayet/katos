@@ -3,11 +3,6 @@
 ### Script setup
 
 set -euo pipefail
-if [ -z "${STY:-}" ]; then
-    sudo apt update
-    sudo apt install -y screen
-    exec screen -S katos bash "$0"
-fi
 
 ### Base system
 
