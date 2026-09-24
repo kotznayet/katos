@@ -1,5 +1,5 @@
 ## Katos (WIP)
-Wanted a lightweight and cool os* for your RPi 5 (or any arm64 sbc)... You may have found it.
+Wanted a lightweight and cool os* for your RPi 5 (or any arm64 sbc) or a proxmox lxc (Even more WIP)... You may have found it.
 
 > It needs:
 >+ 5.5 GB storage
