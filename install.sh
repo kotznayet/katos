@@ -6,8 +6,8 @@ set -euo pipefail
 
 ### Base system
 
-sudo apt upgrade -y
-sudo apt install -y --no-install-recommends \
+apt upgrade -y
+apt install -y --no-install-recommends \
   wget curl git zsh tmux unzip \
   python3 python3-pip python3-venv \
   nodejs npm btop toilet \
@@ -87,8 +87,8 @@ plasma-apply-lookandfeel org.kde.breezedark.desktop || true
 
 ### Autologin tty1
 
-sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
-sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EOF
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+tee /etc/systemd/system/getty@tty1.service.d/autologin.conf >/dev/null <<EOF
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
@@ -101,8 +101,8 @@ touch ~/.zshrc
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k || true
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 
-sudo rm -f /var/swap
+rm -f /var/swap
 
 echo " SETUP COMPLETE — REBOOTING"
 
-sudo reboot
+reboot
