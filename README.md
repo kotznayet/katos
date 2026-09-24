@@ -1,13 +1,13 @@
 ## Katos (WIP)
-Wanted a lightweight and cool os* for your RPi 5 (or any arm64 sbc) or a proxmox lxc (Even more WIP)... You may have found it.
+Wanted a lightweight and cool os* for youra proxmox lxc... You may have found it.
 
 > It needs:
 >+ 5.5 GB storage
 >+ 1GB memory
->+ arm64 processor
+>+ amd64 processor
 >+ Debian Trixie 
 
-Katos is a KDE desktop and toolbox installer designed for Raspberry Pi OS ***lite*** / Debian trixie on arm64, but with Breeze Dark, VSCodium, Zen Browser (and ublock origin).
+Katos is a KDE desktop and toolbox installer designed forDebian trixie on amd64, but with Breeze Dark, VSCodium, Zen Browser (and ublock origin).
 
 A lot of tools preinstalled.
 
@@ -20,9 +20,7 @@ A lot of tools preinstalled.
 >+ ark
 
 First get an image of Debian Trixie-like arm64 os (RPi os lite/Debian Trixie on other SBCs) and run 
-`bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/main/install.sh)`
+`bash <(curl -fsSL https://raw.githubusercontent.com/kotznayet/katos/lxc/install.sh)`
  to install.
 
 *It is an installer script not a distro.
-
-This wont work on termux (sadly).
