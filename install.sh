@@ -17,19 +17,13 @@ sudo apt install -y --no-install-recommends \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
   pipewire pipewire-jack wireplumber \
-  rpi-eeprom exfatprogs nmap kcalc \
+  exfatprogs nmap kcalc firefox-esr \
   command-not-found yt-dlp ffmpeg libglu1-mesa
 
 
 ### Remove everyting unneeded
 
-sudo systemctl disable --now cloud-init.service cloud-init-local.service \
-  cloud-config.service cloud-final.service NetworkManager-wait-online.service \
-  systemd-networkd-wait-online.service 2>/dev/null || true
-sudo systemctl mask cloud-init.service cloud-init-local.service \
-  cloud-config.service cloud-final.service 2>/dev/null || true
-sudo apt purge -y cloud-init htop || true
-sudo rm -rf /etc/cloud /var/lib/cloud
+sudo apt purge -y htop || true
 
 
 ### Wayland environment
@@ -44,18 +38,9 @@ EOF
 
 ### Pi-Apps
 
-
-git clone https://github.com/Botspot/pi-apps.git "$HOME/pi-apps"
-"$HOME/pi-apps/install"
-"$HOME/pi-apps/manage" install "More RAM"
-"$HOME/pi-apps/manage" install "Zen"
-"$HOME/pi-apps/manage" install "Persepolis Download Manager"
-"$HOME/pi-apps/manage" install "VSCodium"
-
-
 ### uBlock Origin
 
-ZEN_PROFILE=$(find "$HOME/.zen" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -n1)
+ZEN_PROFILE=$(find "$HOME/.firefox" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -n1)
 if [ -n "$ZEN_PROFILE" ]; then
   mkdir -p "$ZEN_PROFILE/extensions"
   wget -qO "$ZEN_PROFILE/extensions/uBlock0@raymondhill.net.xpi" \
@@ -97,29 +82,6 @@ cp "$TMP_FONT"/*.ttf ~/.local/share/fonts/
 fc-cache -f
 rm -rf "$TMP_FONT"
 
-
-### VSCodium settings
-
-mkdir -p ~/.config/VSCodium/User
-
-cat > ~/.config/VSCodium/User/settings.json <<EOF
-{
-  "editor.fontFamily": "CascadiaCode Nerd Font, monospace",
-  "editor.fontLigatures": true,
-  "terminal.integrated.fontFamily": "CascadiaCode Nerd Font",
-  "window.titleBarStyle": "native",
-  "window.menuBarVisibility": "compact",
-  "window.menuStyle": "custom"
-}
-EOF
-
-cat > ~/.config/VSCodium/User/argv.json <<EOF
-{
-  "ozone-platform": "wayland",
-  "enable-features": "UseOzonePlatform",
-  "disable-gpu-sandbox": true
-}
-EOF
 
 ### Disable lock
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
