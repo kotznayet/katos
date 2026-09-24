@@ -12,18 +12,12 @@ sudo apt install -y --no-install-recommends \
   python3 python3-pip python3-venv \
   nodejs npm btop toilet \
   plasma-desktop plasma-workspace kwin-wayland xwayland \
-  plasma-nm bluedevil dolphin konsole kate kdialog \
-  vlc kde-spectacle ark filelight systemsettings powerdevil \
+  plasma-nm dolphin konsole kate kdialog \
+  vlc kde-spectacle ark filelight systemsettings \
   plasma-pa kscreen plasma-integration plasma-browser-integration \
   kwalletmanager kde-cli-tools partitionmanager \
-  pipewire pipewire-jack wireplumber \
-  exfatprogs nmap kcalc firefox-esr \
-  command-not-found yt-dlp ffmpeg libglu1-mesa
-
-
-### Remove everyting unneeded
-
-sudo apt purge -y htop || true
+  nmap kcalc firefox-esr \
+  command-not-found libglu1-mesa
 
 
 ### Wayland environment
@@ -34,9 +28,6 @@ QT_QPA_PLATFORM=wayland
 XDG_CURRENT_DESKTOP=KDE
 MOZ_ENABLE_WAYLAND=1
 EOF
-
-
-### Pi-Apps
 
 ### uBlock Origin
 
@@ -87,16 +78,6 @@ rm -rf "$TMP_FONT"
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false
 kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false
 
-### PipeWire low latency
-
-mkdir -p ~/.config/pipewire/pipewire.conf.d
-cat > ~/.config/pipewire/pipewire.conf.d/low-latency.conf <<EOF
-context.properties = {
-  default.clock.rate = 48000
-  default.clock.min-quantum = 64
-  default.clock.max-quantum = 128
-}
-EOF
 
 ### Breeze Dark
 
